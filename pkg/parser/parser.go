@@ -3,8 +3,9 @@ package parser
 import (
 	"fmt"
 	"go/ast"
-	"go/parser"
 	"go/token"
+
+	"golang.org/x/tools/go/packages"
 )
 
 type Value struct {
@@ -24,56 +25,52 @@ type Interface struct {
 	Methods     []Method
 }
 
-func ParseInterfaceInDir(fileName, interfaceName string) (*Interface, error) {
-	// Создаём набор токенов
-	fset := token.NewFileSet()
-
-	// Парсим файл
-	node, err := parser.ParseFile(fset, fileName, nil, parser.ParseComments)
+func ParseInterfaceInDir(dir, interfaceName string) (*Interface, error) {
+	cfg := &packages.Config{Mode: packages.NeedSyntax | packages.NeedTypes}
+	pkgs, err := packages.Load(cfg, dir)
 	if err != nil {
 		return nil, err
 	}
 
-	iface, err := getInterfaceByName(node, interfaceName)
+	if len(pkgs) != 1 {
+		return nil, fmt.Errorf("expected exactly one package, got %d", len(pkgs))
+	}
+
+	iface, err := getInterfaceByName(pkgs[0].Syntax, interfaceName)
 	if err != nil {
 		return nil, err
 	}
 
-	packageName := getPackageName(node)
-
-	return parseInterface(interfaceName, packageName, iface), nil
+	return parseInterface(interfaceName, pkgs[0].Types.Name(), iface), nil
 }
 
-func getPackageName(file *ast.File) string {
-	return file.Name.Name
-}
-
-func getInterfaceByName(f *ast.File, name string) (*ast.InterfaceType, error) {
-	// Проходим по всем декларациям в файле
-	for _, decl := range f.Decls {
-		// Ищем декларацию типа
-		genDecl, ok := decl.(*ast.GenDecl)
-		if !ok || genDecl.Tok != token.TYPE {
-			continue
-		}
-
-		for _, spec := range genDecl.Specs {
-			typeSpec, ok := spec.(*ast.TypeSpec)
-			if !ok {
+func getInterfaceByName(files []*ast.File, name string) (*ast.InterfaceType, error) {
+	for _, f := range files {
+		for _, decl := range f.Decls {
+			// Ищем декларацию типа
+			genDecl, ok := decl.(*ast.GenDecl)
+			if !ok || genDecl.Tok != token.TYPE {
 				continue
 			}
 
-			// Проверяем, что это интерфейс с нужным именем
-			if typeSpec.Name.Name != name {
-				continue
-			}
+			for _, spec := range genDecl.Specs {
+				typeSpec, ok := spec.(*ast.TypeSpec)
+				if !ok {
+					continue
+				}
 
-			iface, ok := typeSpec.Type.(*ast.InterfaceType)
-			if !ok {
-				return nil, fmt.Errorf("%s is not an interface", name)
-			}
+				// Проверяем, что это интерфейс с нужным именем
+				if typeSpec.Name.Name != name {
+					continue
+				}
 
-			return iface, nil
+				iface, ok := typeSpec.Type.(*ast.InterfaceType)
+				if !ok {
+					return nil, fmt.Errorf("%s is not an interface", name)
+				}
+
+				return iface, nil
+			}
 		}
 	}
 

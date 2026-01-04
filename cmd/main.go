@@ -11,14 +11,14 @@ import (
 )
 
 type args struct {
-	fileName       string
+	dir            string
 	interfaceName  string
 	outputFileName string
 }
 
 func getArgs() args {
 	var args args
-	flag.StringVar(&args.fileName, "file-name", "", "filename to look for an interface")
+	flag.StringVar(&args.dir, "dir", ".", "directory to parse")
 	flag.StringVar(&args.interfaceName, "interface", "", "interface name")
 	flag.StringVar(&args.outputFileName, "output", "", "target file name")
 	flag.Parse()
@@ -27,7 +27,7 @@ func getArgs() args {
 		args.outputFileName = strings.ToLower(args.interfaceName) + ".gen.go"
 	}
 
-	if args.fileName == "" || args.interfaceName == "" {
+	if args.dir == "" || args.interfaceName == "" {
 		log.Fatalf("Usage: %s --file-name=<path_to_file> --interface=<interface_name> \n", os.Args[0])
 	}
 
@@ -36,7 +36,7 @@ func getArgs() args {
 
 func main() {
 	args := getArgs()
-	desc, err := parser.ParseInterfaceInDir(args.fileName, args.interfaceName)
+	desc, err := parser.ParseInterfaceInDir(args.dir, args.interfaceName)
 	if err != nil {
 		log.Fatalf("Failed to parse interface: %v", err)
 	}
