@@ -1,0 +1,52 @@
+version: "2"
+run:
+  timeout: 2m
+  build-tags:
+    - codeanalysis
+linters:
+  default: all
+  disable:
+    - wsl
+    - err113
+    - wsl_v5
+    - depguard
+    - exhaustruct
+    - varnamelen
+    - noinlineerr
+    - godox
+    - wrapcheck
+    - modernize
+    - perfsprint
+  settings:
+    lll:
+      line-length: 140
+      tab-width: 2
+    cyclop:
+      max-complexity: 20
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/xgamtx/errors
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

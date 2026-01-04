@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -25,7 +24,7 @@ func getArgs() args {
 	flag.Parse()
 
 	if args.outputFileName == "" {
-		args.outputFileName = fmt.Sprintf("%s.gen.go", strings.ToLower(args.interfaceName))
+		args.outputFileName = strings.ToLower(args.interfaceName) + ".gen.go"
 	}
 
 	if args.fileName == "" || args.interfaceName == "" {
@@ -35,18 +34,15 @@ func getArgs() args {
 	return args
 }
 
-// Пример использования
 func main() {
 	args := getArgs()
 	desc, err := parser.ParseInterfaceInDir(args.fileName, args.interfaceName)
 	if err != nil {
 		log.Fatalf("Failed to parse interface: %v", err)
-		return
 	}
 
 	output := generator.Generate(desc)
-	if err = os.WriteFile(args.outputFileName, []byte(output), 0o644); err != nil {
+	if err = os.WriteFile(args.outputFileName, []byte(output), 0o600); err != nil { //nolint:mnd
 		log.Fatalf("Failed to write output file: %v", err)
-		return
 	}
 }
