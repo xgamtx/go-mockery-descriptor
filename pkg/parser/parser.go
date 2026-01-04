@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"go/types"
 
 	"golang.org/x/tools/go/packages"
 )
 
 type Value struct {
-	Name string
-	Type ast.Expr
+	Name      string
+	Type      ast.Expr
+	PathTypes []string
 }
 
 type Method struct {
@@ -26,7 +28,7 @@ type Interface struct {
 }
 
 func ParseInterfaceInDir(dir, interfaceName string) (*Interface, error) {
-	cfg := &packages.Config{Mode: packages.NeedSyntax | packages.NeedTypes}
+	cfg := &packages.Config{Mode: packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo}
 	pkgs, err := packages.Load(cfg, dir)
 	if err != nil {
 		return nil, err
@@ -41,7 +43,7 @@ func ParseInterfaceInDir(dir, interfaceName string) (*Interface, error) {
 		return nil, err
 	}
 
-	return parseInterface(interfaceName, pkgs[0].Types.Name(), iface), nil
+	return parseInterface(interfaceName, pkgs[0].Types.Name(), iface, pkgs[0].TypesInfo), nil
 }
 
 func getInterfaceByName(files []*ast.File, name string) (*ast.InterfaceType, error) {
@@ -77,12 +79,51 @@ func getInterfaceByName(files []*ast.File, name string) (*ast.InterfaceType, err
 	return nil, fmt.Errorf("%s is not found", name)
 }
 
-func parseInterface(interfaceName, packageName string, iface *ast.InterfaceType) *Interface {
+func getImportsForExpr(expr ast.Expr, typesInfo *types.Info) []string {
+	switch t := expr.(type) {
+	case *ast.Ident:
+		if obj := typesInfo.ObjectOf(t); obj != nil {
+			if pkgName, ok := obj.(*types.PkgName); ok {
+				return []string{pkgName.Imported().Path()}
+			}
+		}
+
+		return nil // internal or core
+
+	case *ast.SelectorExpr:
+		// Type with package
+		return getImportsForExpr(t.X, typesInfo)
+
+	case *ast.StarExpr:
+		// Pointer: *Type
+		return getImportsForExpr(t.X, typesInfo)
+
+	case *ast.ArrayType:
+		// Slice: []Type
+		return getImportsForExpr(t.Elt, typesInfo)
+
+	case *ast.MapType:
+		// Map: map[Key]Value
+		key := getImportsForExpr(t.Key, typesInfo)
+		value := getImportsForExpr(t.Value, typesInfo)
+		if key == nil && value == nil {
+			return nil
+		}
+
+		return append(key, value...)
+
+	default:
+		return nil
+	}
+}
+
+func parseInterface(interfaceName, packageName string, iface *ast.InterfaceType, typesInfo *types.Info) *Interface {
 	result := &Interface{
 		PackageName: packageName,
 		Name:        interfaceName,
 		Methods:     make([]Method, 0, len(iface.Methods.List)),
 	}
+
 	for _, method := range iface.Methods.List {
 		// Пропускаем встроенные интерфейсы (embedding)
 		if len(method.Names) == 0 {
@@ -100,12 +141,12 @@ func parseInterface(interfaceName, packageName string, iface *ast.InterfaceType)
 
 		// Обрабатываем параметры
 		if funcType.Params != nil {
-			desc.Params = extractFields(funcType.Params.List)
+			desc.Params = extractFields(funcType.Params.List, typesInfo)
 		}
 
 		// Обрабатываем возвращаемые значения
 		if funcType.Results != nil {
-			desc.Returns = extractFields(funcType.Results.List)
+			desc.Returns = extractFields(funcType.Results.List, typesInfo)
 		}
 
 		result.Methods = append(result.Methods, desc)
@@ -114,16 +155,17 @@ func parseInterface(interfaceName, packageName string, iface *ast.InterfaceType)
 	return result
 }
 
-func extractFields(fields []*ast.Field) []Value {
+func extractFields(fields []*ast.Field, typesInfo *types.Info) []Value {
 	var values []Value
 
 	for _, field := range fields {
+		imports := getImportsForExpr(field.Type, typesInfo)
 		if len(field.Names) == 0 {
 			// Анонимный параметр (часто в возвращаемых значениях)
-			values = append(values, Value{Name: "", Type: field.Type})
+			values = append(values, Value{Name: "", Type: field.Type, PathTypes: imports})
 		} else {
 			for _, name := range field.Names {
-				values = append(values, Value{Name: name.Name, Type: field.Type})
+				values = append(values, Value{Name: name.Name, Type: field.Type, PathTypes: imports})
 			}
 		}
 	}
