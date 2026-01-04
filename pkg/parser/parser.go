@@ -19,8 +19,9 @@ type Method struct {
 }
 
 type Interface struct {
-	Name    string
-	Methods []Method
+	PackageName string
+	Name        string
+	Methods     []Method
 }
 
 func ParseInterfaceInDir(fileName, interfaceName string) (*Interface, error) {
@@ -38,7 +39,13 @@ func ParseInterfaceInDir(fileName, interfaceName string) (*Interface, error) {
 		return nil, err
 	}
 
-	return parseInterface(interfaceName, iface), nil
+	packageName := getPackageName(node)
+
+	return parseInterface(interfaceName, packageName, iface), nil
+}
+
+func getPackageName(file *ast.File) string {
+	return file.Name.Name
 }
 
 func getInterfaceByName(f *ast.File, name string) (*ast.InterfaceType, error) {
@@ -73,10 +80,11 @@ func getInterfaceByName(f *ast.File, name string) (*ast.InterfaceType, error) {
 	return nil, fmt.Errorf("%s is not found", name)
 }
 
-func parseInterface(name string, iface *ast.InterfaceType) *Interface {
+func parseInterface(interfaceName, packageName string, iface *ast.InterfaceType) *Interface {
 	result := &Interface{
-		Name:    name,
-		Methods: make([]Method, 0, len(iface.Methods.List)),
+		PackageName: packageName,
+		Name:        interfaceName,
+		Methods:     make([]Method, 0, len(iface.Methods.List)),
 	}
 	for _, method := range iface.Methods.List {
 		// Пропускаем встроенные интерфейсы (embedding)
