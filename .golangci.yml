@@ -17,6 +17,7 @@ linters:
     - wrapcheck
     - modernize
     - perfsprint
+    - ireturn
   settings:
     lll:
       line-length: 140
