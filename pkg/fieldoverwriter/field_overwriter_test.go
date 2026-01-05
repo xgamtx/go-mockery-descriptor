@@ -28,7 +28,7 @@ func Test_NewFieldOverwriter(t *testing.T) { //nolint:funlen
 
 			want: &FieldOverwriter{
 				methodName: "SetX",
-				fieldName:  "X",
+				fieldName:  Link("X"),
 				funcPath:   "context",
 				funcName:   "context.Context",
 			},
@@ -39,7 +39,7 @@ func Test_NewFieldOverwriter(t *testing.T) { //nolint:funlen
 
 			want: &FieldOverwriter{
 				methodName: "SetX",
-				fieldName:  "X",
+				fieldName:  Link("X"),
 				funcPath:   "github.com/xgamtx/go-mockery-descriptor/pkg/assessor",
 				funcName:   "assessor.OneOf",
 			},
@@ -50,7 +50,7 @@ func Test_NewFieldOverwriter(t *testing.T) { //nolint:funlen
 
 			want: &FieldOverwriter{
 				methodName: "SetX",
-				fieldName:  "X",
+				fieldName:  Link("X"),
 				funcPath:   "github.com/jackc/pgx/v5",
 				funcName:   "pgx.Tx",
 			},
@@ -61,7 +61,7 @@ func Test_NewFieldOverwriter(t *testing.T) { //nolint:funlen
 
 			want: &FieldOverwriter{
 				methodName: "SetX",
-				fieldName:  "X",
+				fieldName:  Link("X"),
 				funcPath:   "",
 				funcName:   "OneOf",
 			},
@@ -72,7 +72,18 @@ func Test_NewFieldOverwriter(t *testing.T) { //nolint:funlen
 
 			want: &FieldOverwriter{
 				methodName: "SetX",
-				fieldName:  "X",
+				fieldName:  Link("X"),
+				funcPath:   "github.com/xgamtx/go-mockery-descriptor/pkg/assessor",
+				funcName:   "assessor.OneOf",
+			},
+		},
+		{
+			name:   "OK, with param index",
+			params: "SetX.0=oneOf",
+
+			want: &FieldOverwriter{
+				methodName: "SetX",
+				fieldIndex: Link(0),
 				funcPath:   "github.com/xgamtx/go-mockery-descriptor/pkg/assessor",
 				funcName:   "assessor.OneOf",
 			},
@@ -92,3 +103,5 @@ func Test_NewFieldOverwriter(t *testing.T) { //nolint:funlen
 		})
 	}
 }
+
+func Link[T any](val T) *T { return &val }

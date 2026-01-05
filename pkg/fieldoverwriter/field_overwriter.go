@@ -3,6 +3,7 @@ package fieldoverwriter
 import (
 	"errors"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -48,9 +49,19 @@ func getAliasFromPath(path string) string {
 	return parts[len(parts)-1]
 }
 
+func tryParseUnsignedInt(s string) int {
+	val, err := strconv.Atoi(s)
+	if err != nil || val < 0 {
+		return -1
+	}
+
+	return val
+}
+
 type FieldOverwriter struct {
 	methodName string
-	fieldName  string
+	fieldName  *string
+	fieldIndex *int
 	funcPath   string
 	funcName   string
 }
@@ -71,10 +82,17 @@ func newFieldOverwriter(params string) (*FieldOverwriter, error) {
 		funcPath = stdFunc.Path
 		funcName = stdFunc.Name
 	}
+	var fieldIndex *int
+	fieldName := &match[2]
+	if parsedFieldName := tryParseUnsignedInt(*fieldName); parsedFieldName >= 0 {
+		fieldIndex = &parsedFieldName
+		fieldName = nil
+	}
 
 	return &FieldOverwriter{
 		methodName: match[1],
-		fieldName:  match[2],
+		fieldName:  fieldName,
+		fieldIndex: fieldIndex,
 		funcPath:   funcPath,
 		funcName:   funcName,
 	}, nil
@@ -93,21 +111,11 @@ func getStdFunction(funcPath, funcName string) *stdFuncDescription {
 	return &stdFunc
 }
 
-func (f *FieldOverwriter) GetMethodName() string {
-	return f.methodName
-}
-
-func (f *FieldOverwriter) GetFieldName() string {
-	return f.fieldName
-}
-
-func (f *FieldOverwriter) GetFuncPath() string {
-	return f.funcPath
-}
-
-func (f *FieldOverwriter) GetFuncName() string {
-	return f.funcName
-}
+func (f *FieldOverwriter) GetMethodName() string { return f.methodName }
+func (f *FieldOverwriter) GetFieldName() *string { return f.fieldName }
+func (f *FieldOverwriter) GetFieldIndex() *int   { return f.fieldIndex }
+func (f *FieldOverwriter) GetFuncPath() string   { return f.funcPath }
+func (f *FieldOverwriter) GetFuncName() string   { return f.funcName }
 
 type Storage struct {
 	overwriters []FieldOverwriter
@@ -127,15 +135,13 @@ func NewStorage(overwritersParams []string) (*Storage, error) {
 	return &Storage{overwriters: overwriters}, nil
 }
 
-func (s *Storage) Get(methodName, paramName string, _ int) Overwriter {
+func (s *Storage) Get(methodName, paramName string, index int) Overwriter {
 	for _, overwriter := range s.overwriters {
-		if methodName == overwriter.GetMethodName() && paramName == overwriter.GetFieldName() {
+		if methodName == overwriter.GetMethodName() && ((overwriter.GetFieldName() != nil && paramName == *overwriter.GetFieldName()) ||
+			(overwriter.GetFieldIndex() != nil && index == *overwriter.GetFieldIndex())) {
 			return &overwriter
 		}
 	}
 
 	return nil
 }
-
-// TODO support field index
-// TODO support several overwriters
