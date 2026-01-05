@@ -424,3 +424,4 @@ func unique(vals []string) []string {
 // TODO add sub interface support.
 // TODO parametrize via config?
 // TODO support several overwriters
+// TODO support function instead of interfaces
