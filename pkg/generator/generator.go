@@ -82,7 +82,7 @@ func newCustomFunctionParamView(v *parser.Value, fieldOverwriter fieldoverwriter
 	}
 
 	return &customFunctionParamView{
-		paramName: v.Name,
+		paramName: capitalize(v.Name),
 		paramType: exprToString(v.Type),
 		funcName:  fieldOverwriter.GetFuncName(),
 		pathTypes: pathTypes,

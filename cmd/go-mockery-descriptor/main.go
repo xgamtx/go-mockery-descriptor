@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -9,11 +10,23 @@ import (
 	"github.com/xgamtx/go-mockery-descriptor/pkg/app"
 )
 
+type StringSlice []string
+
+func (ss *StringSlice) String() string {
+	return fmt.Sprintf("%v", *ss)
+}
+
+func (ss *StringSlice) Set(value string) error {
+	*ss = append(*ss, value)
+
+	return nil
+}
+
 type args struct {
 	dir                   string
 	interfaceName         string
 	outputFileName        string
-	fieldOverwriterParams []string
+	fieldOverwriterParams StringSlice
 	fullPackagePath       string
 }
 
@@ -23,13 +36,8 @@ func getArgs() args {
 	flag.StringVar(&args.interfaceName, "interface", "", "interface name")
 	flag.StringVar(&args.outputFileName, "output", "", "target file name")
 	flag.StringVar(&args.fullPackagePath, "full-package-path", "", "package name")
-	var fieldOverwriterParam string
-	flag.StringVar(&fieldOverwriterParam, "field-overwriter-param", "", "field overwriter param")
+	flag.Var(&args.fieldOverwriterParams, "field-overwriter-param", "field overwriter param, can be used more than once")
 	flag.Parse()
-
-	if fieldOverwriterParam != "" {
-		args.fieldOverwriterParams = []string{fieldOverwriterParam}
-	}
 
 	if args.outputFileName == "" {
 		args.outputFileName = strings.ToLower(args.interfaceName) + ".gen.go"

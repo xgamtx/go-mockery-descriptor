@@ -35,7 +35,7 @@ type mCall struct {
 }
 
 type sliceCall struct {
-	rows []string
+	Rows []string
 
 	ReceivedR0 error
 }
@@ -64,7 +64,7 @@ func makeSomeMock(t *testing.T, calls *someCalls) Some {
 		m.EXPECT().M(call.M).Return(call.ReceivedR0).Once()
 	}
 	for _, call := range calls.Slice {
-		m.EXPECT().Slice(assessor.OneOf(call.rows)).Return(call.ReceivedR0).Once()
+		m.EXPECT().Slice(assessor.OneOf(call.Rows)).Return(call.ReceivedR0).Once()
 	}
 	return m
 }
