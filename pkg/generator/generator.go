@@ -8,12 +8,9 @@ import (
 	"github.com/xgamtx/go-mockery-descriptor/pkg/parser"
 )
 
-type paramKind int
-
 const (
-	kindUnknown paramKind = iota
-	kindCtx
-	kindTx
+	anyCtxVar = "anyCtx"
+	anyTxVar  = "anyTx"
 )
 
 func exprToString(expr ast.Expr) string {
@@ -41,27 +38,56 @@ func exprToString(expr ast.Expr) string {
 	}
 }
 
-type paramView struct {
-	Kind      paramKind
-	Name      string
-	Type      string
-	PathTypes []string
+type param interface {
+	GenerateField() string
+	GenerateAssessor(callerName string) string
+	GetPathTypes() []string
 }
 
-func newParamView(v *parser.Value, i int) *paramView {
+type stdParamView struct {
+	name      string
+	paramType string
+	pathTypes []string
+}
+
+type ctxParamView struct{}
+
+func (v *ctxParamView) GenerateField() string          { return "" }
+func (v *ctxParamView) GenerateAssessor(string) string { return anyCtxVar }
+func (v *ctxParamView) GetPathTypes() []string         { return nil }
+
+type txParamView struct{}
+
+func (v *txParamView) GenerateField() string          { return "" }
+func (v *txParamView) GenerateAssessor(string) string { return anyTxVar }
+func (v *txParamView) GetPathTypes() []string         { return nil }
+
+func newParamView(v *parser.Value, i int) param {
 	t := exprToString(v.Type)
 	switch t {
 	case "context.Context":
-		return &paramView{Kind: kindCtx}
+		return &ctxParamView{}
 	case "pgx.Tx":
-		return &paramView{Kind: kindTx}
+		return &txParamView{}
 	}
 	name := v.Name
 	if name == "" {
 		name = "p" + strconv.Itoa(i)
 	}
 
-	return &paramView{Kind: kindUnknown, Name: capitalize(name), Type: t, PathTypes: v.PathTypes}
+	return &stdParamView{name: capitalize(name), paramType: t, pathTypes: v.PathTypes}
+}
+
+func (p *stdParamView) GenerateField() string {
+	return p.name + " " + p.paramType
+}
+
+func (p *stdParamView) GenerateAssessor(callerName string) string {
+	return callerName + "." + p.name
+}
+
+func (p *stdParamView) GetPathTypes() []string {
+	return p.pathTypes
 }
 
 type returnView struct {
@@ -82,18 +108,18 @@ func newReturnView(v *parser.Value, i int) *returnView {
 
 type methodView struct {
 	Name    string
-	Params  []paramView
+	Params  []param
 	Returns []returnView
 }
 
 func newMethodView(method *parser.Method) *methodView {
 	res := &methodView{
 		Name:    method.Name,
-		Params:  make([]paramView, 0, len(method.Params)),
+		Params:  make([]param, 0, len(method.Params)),
 		Returns: make([]returnView, 0, len(method.Returns)),
 	}
 	for i, param := range method.Params {
-		res.Params = append(res.Params, *newParamView(&param, i))
+		res.Params = append(res.Params, newParamView(&param, i))
 	}
 	for i, r := range method.Returns {
 		res.Returns = append(res.Returns, *newReturnView(&r, i))
@@ -107,7 +133,7 @@ func (m *methodView) IsAnyField() bool {
 		return true
 	}
 	for _, param := range m.Params {
-		if param.Kind == kindUnknown {
+		if param.GenerateField() != "" {
 			return true
 		}
 	}
@@ -133,8 +159,8 @@ func (m *methodView) generateStructure() string {
 	}
 	var paramsCount int
 	for _, param := range m.Params {
-		if param.Kind == kindUnknown {
-			lines = append(lines, "\t"+param.Name+" "+param.Type)
+		if view := param.GenerateField(); view != "" {
+			lines = append(lines, "\t"+view)
 			paramsCount++
 		}
 	}
@@ -167,14 +193,7 @@ func (m *methodView) generateCall() string {
 		if i > 0 {
 			line += ", "
 		}
-		switch param.Kind {
-		case kindUnknown:
-			line += "call." + param.Name
-		case kindCtx:
-			line += "anyCtx"
-		case kindTx:
-			line += "anyTx"
-		}
+		line += param.GenerateAssessor("call")
 	}
 	line += ").Return("
 	for i, r := range m.Returns {
@@ -249,7 +268,7 @@ func (iv *interfaceView) generateConstructor() string {
 func (iv *interfaceView) isCtxRequired() bool {
 	for _, m := range iv.Methods {
 		for _, param := range m.Params {
-			if param.Kind == kindCtx {
+			if param.GenerateAssessor("") == anyCtxVar {
 				return true
 			}
 		}
@@ -261,7 +280,7 @@ func (iv *interfaceView) isCtxRequired() bool {
 func (iv *interfaceView) isTxRequired() bool {
 	for _, m := range iv.Methods {
 		for _, param := range m.Params {
-			if param.Kind == kindTx {
+			if param.GenerateAssessor("") == anyTxVar {
 				return true
 			}
 		}
@@ -271,6 +290,8 @@ func (iv *interfaceView) isTxRequired() bool {
 }
 
 func generateAdditionalVars(iface *interfaceView) string {
+	ctxVarDefinition := anyCtxVar + " = mock.Anything"
+	txVarDefinition := anyTxVar + " = mock.Anything"
 	ctxRequired := iface.isCtxRequired()
 	txRequired := iface.isTxRequired()
 	switch {
@@ -279,16 +300,16 @@ func generateAdditionalVars(iface *interfaceView) string {
 	case ctxRequired && txRequired:
 		lines := []string{
 			"var (",
-			"\tanyCtx = mock.Anything",
-			"\tanyTx = mock.Anything",
+			"\t" + ctxVarDefinition,
+			"\t" + txVarDefinition,
 			")",
 		}
 
 		return strings.Join(lines, "\n")
 	case ctxRequired:
-		return "var anyCtx = mock.Anything"
+		return "var " + ctxVarDefinition
 	default:
-		return "var anyTx = mock.Anything"
+		return "var " + txVarDefinition
 	}
 }
 
@@ -300,7 +321,7 @@ func (iv *interfaceView) getImports() []string {
 	res := []string{"testing", "github.com/stretchr/testify/mock"}
 	for _, m := range iv.Methods {
 		for _, param := range m.Params {
-			res = append(res, param.PathTypes...)
+			res = append(res, param.GetPathTypes()...)
 		}
 		for _, ret := range m.Returns {
 			res = append(res, ret.PathTypes...)
