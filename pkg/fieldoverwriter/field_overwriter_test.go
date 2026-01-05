@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_NewFieldOverwriter(t *testing.T) {
+func Test_NewFieldOverwriter(t *testing.T) { //nolint:funlen
 	t.Parallel()
 
 	tests := []struct {
@@ -64,6 +64,17 @@ func Test_NewFieldOverwriter(t *testing.T) {
 				fieldName:  "X",
 				funcPath:   "",
 				funcName:   "OneOf",
+			},
+		},
+		{
+			name:   "OK, standard function",
+			params: "SetX.X=oneOf",
+
+			want: &FieldOverwriter{
+				methodName: "SetX",
+				fieldName:  "X",
+				funcPath:   "github.com/xgamtx/go-mockery-descriptor/pkg/assessor",
+				funcName:   "assessor.OneOf",
 			},
 		},
 	}

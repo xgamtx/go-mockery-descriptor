@@ -6,6 +6,27 @@ import (
 	"strings"
 )
 
+const (
+	stdFuncOneOf             = "oneOf"
+	stdFunctionElementsMatch = "elementsMatch"
+)
+
+type stdFuncDescription struct {
+	Name string
+	Path string
+}
+
+var stdFunctions = map[string]stdFuncDescription{ //nolint:gochecknoglobals
+	stdFuncOneOf: {
+		Name: "assessor.OneOf",
+		Path: "github.com/xgamtx/go-mockery-descriptor/pkg/assessor",
+	},
+	stdFunctionElementsMatch: {
+		Name: "assessor.ElementsMatch",
+		Path: "github.com/xgamtx/go-mockery-descriptor/pkg/assessor",
+	},
+}
+
 var errInvalidFieldOverwriterParams = errors.New("invalid field overwriter params")
 
 type Overwriter interface {
@@ -15,7 +36,7 @@ type Overwriter interface {
 
 func getAliasFromPath(path string) string {
 	parts := strings.Split(path, "/")
-	if len(parts) < 2 {
+	if len(parts) < 2 { //nolint:mnd
 		return path
 	}
 
@@ -46,6 +67,10 @@ func newFieldOverwriter(params string) (*FieldOverwriter, error) {
 	if alias := getAliasFromPath(funcPath); alias != "" {
 		funcName = alias + "." + funcName
 	}
+	if stdFunc := getStdFunction(funcPath, funcName); stdFunc != nil {
+		funcPath = stdFunc.Path
+		funcName = stdFunc.Name
+	}
 
 	return &FieldOverwriter{
 		methodName: match[1],
@@ -53,6 +78,19 @@ func newFieldOverwriter(params string) (*FieldOverwriter, error) {
 		funcPath:   funcPath,
 		funcName:   funcName,
 	}, nil
+}
+
+func getStdFunction(funcPath, funcName string) *stdFuncDescription {
+	if funcPath != "" {
+		return nil
+	}
+
+	stdFunc, ok := stdFunctions[funcName]
+	if !ok {
+		return nil
+	}
+
+	return &stdFunc
 }
 
 func (f *FieldOverwriter) GetMethodName() string {
@@ -85,6 +123,7 @@ func NewStorage(overwritersParams []string) (*Storage, error) {
 
 		overwriters = append(overwriters, *overwriter)
 	}
+
 	return &Storage{overwriters: overwriters}, nil
 }
 
@@ -100,4 +139,3 @@ func (s *Storage) Get(methodName, paramName string, _ int) Overwriter {
 
 // TODO support field index
 // TODO support several overwriters
-// TODO add alias to function name

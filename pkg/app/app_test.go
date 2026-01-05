@@ -28,11 +28,9 @@ func TestRun(t *testing.T) {
 		{
 			name: "success",
 
-			dir:           ".",
-			interfaceName: "Some",
-			fieldOverwriterParams: []string{
-				"Slice.rows=github.com/xgamtx/go-mockery-descriptor/pkg/assessor.OneOf",
-			},
+			dir:                   ".",
+			interfaceName:         "Some",
+			fieldOverwriterParams: []string{"Slice.rows=oneOf"},
 
 			want: expectedRes,
 		},
