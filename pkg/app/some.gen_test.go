@@ -3,10 +3,12 @@
 package app
 
 import (
+	"testing"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/mock"
+
 	"github.com/xgamtx/go-mockery-descriptor/pkg/assessor"
-	"testing"
 )
 
 var (

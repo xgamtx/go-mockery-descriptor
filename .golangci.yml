@@ -3,6 +3,7 @@ run:
   timeout: 2m
   build-tags:
     - codeanalysis
+  allow-parallel-runners: true
 linters:
   default: all
   disable:
@@ -42,9 +43,14 @@ formatters:
     - gofumpt
     - goimports
   settings:
+    gci:
+      sections:
+        - standard # Standard section: captures all standard packages.
+        - default # Default section: contains all imports that could not be matched to another section type.
+        - localmodule # Local module section: contains all local packages. This section is not present unless explicitly enabled.
     goimports:
       local-prefixes:
-        - github.com/xgamtx/errors
+        - github.com/xgamtx/go-mockery-descriptor
   exclusions:
     generated: lax
     paths:

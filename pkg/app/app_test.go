@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/xgamtx/go-mockery-descriptor/pkg/app"
 )
 
@@ -21,6 +22,7 @@ func TestRun(t *testing.T) {
 		dir                   string
 		interfaceName         string
 		fieldOverwriterParams []string
+		fullPackagePath       string
 
 		want       string
 		wantErrMsg string
@@ -31,6 +33,7 @@ func TestRun(t *testing.T) {
 			dir:                   ".",
 			interfaceName:         "Some",
 			fieldOverwriterParams: []string{"Slice.rows=oneOf"},
+			fullPackagePath:       "github.com/xgamtx/go-mockery-descriptor",
 
 			want: expectedRes,
 		},
@@ -39,7 +42,7 @@ func TestRun(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := app.Run(tt.dir, tt.interfaceName, tt.fieldOverwriterParams)
+			got, err := app.Run(tt.dir, tt.interfaceName, tt.fieldOverwriterParams, tt.fullPackagePath)
 			assert.Equal(t, tt.want, got)
 			if tt.wantErrMsg != "" {
 				assert.Error(t, err, tt.wantErrMsg)

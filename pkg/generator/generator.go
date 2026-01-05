@@ -6,6 +6,9 @@ import (
 	"go/format"
 	"strconv"
 	"strings"
+	"sync"
+
+	"golang.org/x/tools/imports"
 
 	"github.com/xgamtx/go-mockery-descriptor/pkg/fieldoverwriter"
 	"github.com/xgamtx/go-mockery-descriptor/pkg/parser"
@@ -384,7 +387,9 @@ func (iv *interfaceView) generateImports() string {
 	return strings.Join(lines, "\n")
 }
 
-func Generate(iface *parser.Interface, fieldOverwriterStorage *fieldoverwriter.Storage) (string, error) {
+var importsLocalPrefixMu sync.Mutex //nolint:gochecknoglobals
+
+func Generate(iface *parser.Interface, fieldOverwriterStorage *fieldoverwriter.Storage, fullPackagePath string) (string, error) {
 	view := newInterfaceView(iface, fieldOverwriterStorage)
 
 	lines := []string{
@@ -410,7 +415,20 @@ func Generate(iface *parser.Interface, fieldOverwriterStorage *fieldoverwriter.S
 		return "", err
 	}
 
+	formattedOutput, err = formatImports(formattedOutput, fullPackagePath)
+	if err != nil {
+		return "", err
+	}
+
 	return string(formattedOutput), nil
+}
+
+func formatImports(content []byte, localPrefix string) ([]byte, error) {
+	importsLocalPrefixMu.Lock()
+	defer importsLocalPrefixMu.Unlock()
+
+	imports.LocalPrefix = localPrefix
+	return imports.Process("", content, nil) //nolint:nlreturn
 }
 
 func unique(vals []string) []string {

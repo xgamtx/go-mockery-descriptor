@@ -6,7 +6,7 @@ import (
 	"github.com/xgamtx/go-mockery-descriptor/pkg/parser"
 )
 
-func Run(dir, interfaceName string, fieldOverwriterParams []string) (string, error) {
+func Run(dir, interfaceName string, fieldOverwriterParams []string, fullPackagePath string) (string, error) {
 	desc, err := parser.ParseInterfaceInDir(dir, interfaceName)
 	if err != nil {
 		return "", err
@@ -17,5 +17,5 @@ func Run(dir, interfaceName string, fieldOverwriterParams []string) (string, err
 		return "", err
 	}
 
-	return generator.Generate(desc, overwriterStorage)
+	return generator.Generate(desc, overwriterStorage, fullPackagePath)
 }
