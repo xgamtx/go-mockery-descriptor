@@ -21,7 +21,7 @@ type getXCall struct {
 }
 
 type setXCall struct {
-	X string
+	X []string
 
 	ReceivedR0 error
 }
@@ -55,7 +55,7 @@ func makeSomeMock(t *testing.T, calls *someCalls) Some {
 		m.EXPECT().GetX(anyCtx).Return(call.ReceivedR0).Once()
 	}
 	for _, call := range calls.SetX {
-		m.EXPECT().SetX(anyTx, call.X).Return(call.ReceivedR0).Once()
+		m.EXPECT().SetX(anyTx, assessor.OneOf(call.X)).Return(call.ReceivedR0).Once()
 	}
 	for range calls.Nothing {
 		m.EXPECT().Nothing().Return().Once()
@@ -64,7 +64,7 @@ func makeSomeMock(t *testing.T, calls *someCalls) Some {
 		m.EXPECT().M(call.M).Return(call.ReceivedR0).Once()
 	}
 	for _, call := range calls.Slice {
-		m.EXPECT().Slice(assessor.OneOf(call.Rows)).Return(call.ReceivedR0).Once()
+		m.EXPECT().Slice(assessor.ElementsMatch(call.Rows)).Return(call.ReceivedR0).Once()
 	}
 	return m
 }

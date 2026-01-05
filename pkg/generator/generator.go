@@ -83,7 +83,7 @@ func newCustomFunctionParamView(v *parser.Value, fieldOverwriter fieldoverwriter
 
 	return &customFunctionParamView{
 		paramName: capitalize(v.Name),
-		paramType: exprToString(v.Type),
+		paramType: fieldOverwriter.ModifyType(exprToString(v.Type)),
 		funcName:  fieldOverwriter.GetFuncName(),
 		pathTypes: pathTypes,
 	}
@@ -447,5 +447,4 @@ func unique(vals []string) []string {
 // TODO add check if anyCtx/anyTx exists.
 // TODO add sub interface support.
 // TODO parametrize via config?
-// TODO support several overwriters
 // TODO support function instead of interfaces

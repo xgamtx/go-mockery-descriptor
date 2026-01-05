@@ -32,7 +32,7 @@ func TestRun(t *testing.T) {
 
 			dir:                   ".",
 			interfaceName:         "Some",
-			fieldOverwriterParams: []string{"Slice.rows=oneOf"},
+			fieldOverwriterParams: []string{"Slice.rows=elementsMatch", "SetX.x=oneOf"},
 			fullPackagePath:       "github.com/xgamtx/go-mockery-descriptor",
 
 			want: expectedRes,

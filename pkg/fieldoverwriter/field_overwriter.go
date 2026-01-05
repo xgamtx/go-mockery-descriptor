@@ -13,18 +13,21 @@ const (
 )
 
 type stdFuncDescription struct {
-	Name string
-	Path string
+	Name         string
+	Path         string
+	TypeModifier func(originalType string) string
 }
 
 var stdFunctions = map[string]stdFuncDescription{ //nolint:gochecknoglobals
 	stdFuncOneOf: {
-		Name: "assessor.OneOf",
-		Path: "github.com/xgamtx/go-mockery-descriptor/pkg/assessor",
+		Name:         "assessor.OneOf",
+		Path:         "github.com/xgamtx/go-mockery-descriptor/pkg/assessor",
+		TypeModifier: func(originalType string) string { return "[]" + originalType },
 	},
 	stdFunctionElementsMatch: {
-		Name: "assessor.ElementsMatch",
-		Path: "github.com/xgamtx/go-mockery-descriptor/pkg/assessor",
+		Name:         "assessor.ElementsMatch",
+		Path:         "github.com/xgamtx/go-mockery-descriptor/pkg/assessor",
+		TypeModifier: func(originalType string) string { return originalType },
 	},
 }
 
@@ -33,6 +36,7 @@ var errInvalidFieldOverwriterParams = errors.New("invalid field overwriter param
 type Overwriter interface {
 	GetFuncPath() string
 	GetFuncName() string
+	ModifyType(original string) string
 }
 
 func getAliasFromPath(path string) string {
@@ -59,11 +63,12 @@ func tryParseUnsignedInt(s string) int {
 }
 
 type FieldOverwriter struct {
-	methodName string
-	fieldName  *string
-	fieldIndex *int
-	funcPath   string
-	funcName   string
+	methodName   string
+	fieldName    *string
+	fieldIndex   *int
+	funcPath     string
+	funcName     string
+	typeModifier func(originalType string) string // currently supported on std functions
 }
 
 func newFieldOverwriter(params string) (*FieldOverwriter, error) {
@@ -78,9 +83,12 @@ func newFieldOverwriter(params string) (*FieldOverwriter, error) {
 	if alias := getAliasFromPath(funcPath); alias != "" {
 		funcName = alias + "." + funcName
 	}
+
+	typeModifier := func(originalType string) string { return originalType }
 	if stdFunc := getStdFunction(funcPath, funcName); stdFunc != nil {
 		funcPath = stdFunc.Path
 		funcName = stdFunc.Name
+		typeModifier = stdFunc.TypeModifier
 	}
 	var fieldIndex *int
 	fieldName := &match[2]
@@ -90,11 +98,12 @@ func newFieldOverwriter(params string) (*FieldOverwriter, error) {
 	}
 
 	return &FieldOverwriter{
-		methodName: match[1],
-		fieldName:  fieldName,
-		fieldIndex: fieldIndex,
-		funcPath:   funcPath,
-		funcName:   funcName,
+		methodName:   match[1],
+		fieldName:    fieldName,
+		fieldIndex:   fieldIndex,
+		funcPath:     funcPath,
+		funcName:     funcName,
+		typeModifier: typeModifier,
 	}, nil
 }
 
@@ -111,11 +120,12 @@ func getStdFunction(funcPath, funcName string) *stdFuncDescription {
 	return &stdFunc
 }
 
-func (f *FieldOverwriter) GetMethodName() string { return f.methodName }
-func (f *FieldOverwriter) GetFieldName() *string { return f.fieldName }
-func (f *FieldOverwriter) GetFieldIndex() *int   { return f.fieldIndex }
-func (f *FieldOverwriter) GetFuncPath() string   { return f.funcPath }
-func (f *FieldOverwriter) GetFuncName() string   { return f.funcName }
+func (f *FieldOverwriter) GetMethodName() string             { return f.methodName }
+func (f *FieldOverwriter) GetFieldName() *string             { return f.fieldName }
+func (f *FieldOverwriter) GetFieldIndex() *int               { return f.fieldIndex }
+func (f *FieldOverwriter) GetFuncPath() string               { return f.funcPath }
+func (f *FieldOverwriter) GetFuncName() string               { return f.funcName }
+func (f *FieldOverwriter) ModifyType(original string) string { return f.typeModifier(original) }
 
 type Storage struct {
 	overwriters []FieldOverwriter
