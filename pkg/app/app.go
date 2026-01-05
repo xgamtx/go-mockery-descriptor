@@ -17,5 +17,5 @@ func Run(dir, interfaceName string, fieldOverwriterParams []string) (string, err
 		return "", err
 	}
 
-	return generator.Generate(desc, overwriterStorage), nil
+	return generator.Generate(desc, overwriterStorage)
 }

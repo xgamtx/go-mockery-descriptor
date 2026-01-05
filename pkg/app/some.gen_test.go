@@ -3,15 +3,15 @@
 package app
 
 import (
-	"testing"
-	"github.com/stretchr/testify/mock"
 	"github.com/jackc/pgx/v5"
+	"github.com/stretchr/testify/mock"
 	"github.com/xgamtx/go-mockery-descriptor/pkg/assessor"
+	"testing"
 )
 
 var (
 	anyCtx = mock.Anything
-	anyTx = mock.Anything
+	anyTx  = mock.Anything
 )
 
 type getXCall struct {
@@ -24,7 +24,7 @@ type setXCall struct {
 	ReceivedR0 error
 }
 
-type nothingCall struct {}
+type nothingCall struct{}
 
 type mCall struct {
 	M map[string]pgx.Tx
@@ -39,11 +39,11 @@ type sliceCall struct {
 }
 
 type someCalls struct {
-	GetX []getXCall
-	SetX []setXCall
+	GetX    []getXCall
+	SetX    []setXCall
 	Nothing []nothingCall
-	M []mCall
-	Slice []sliceCall
+	M       []mCall
+	Slice   []sliceCall
 }
 
 func makeSomeMock(t *testing.T, calls *someCalls) Some {

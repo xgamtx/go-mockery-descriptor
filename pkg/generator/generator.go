@@ -3,6 +3,7 @@ package generator
 import (
 	"fmt"
 	"go/ast"
+	"go/format"
 	"strconv"
 	"strings"
 
@@ -383,7 +384,7 @@ func (iv *interfaceView) generateImports() string {
 	return strings.Join(lines, "\n")
 }
 
-func Generate(iface *parser.Interface, fieldOverwriterStorage *fieldoverwriter.Storage) string {
+func Generate(iface *parser.Interface, fieldOverwriterStorage *fieldoverwriter.Storage) (string, error) {
 	view := newInterfaceView(iface, fieldOverwriterStorage)
 
 	lines := []string{
@@ -404,7 +405,12 @@ func Generate(iface *parser.Interface, fieldOverwriterStorage *fieldoverwriter.S
 	lines = append(lines, view.generateStructure())
 	lines = append(lines, view.generateConstructor())
 
-	return strings.Join(lines, "\n\n")
+	formattedOutput, err := format.Source([]byte(strings.Join(lines, "\n\n")))
+	if err != nil {
+		return "", err
+	}
+
+	return string(formattedOutput), nil
 }
 
 func unique(vals []string) []string {
