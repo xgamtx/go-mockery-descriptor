@@ -198,7 +198,7 @@ func (m *methodView) generateStructure() string {
 	var paramsCount int
 	for _, param := range m.Params {
 		if view := param.GenerateField(); view != "" {
-			lines = append(lines, "\t"+view)
+			lines = append(lines, view)
 			paramsCount++
 		}
 	}
@@ -207,7 +207,7 @@ func (m *methodView) generateStructure() string {
 		lines = append(lines, "")
 	}
 	for _, r := range m.Returns {
-		lines = append(lines, "\t"+r.Name+" "+r.Type)
+		lines = append(lines, r.Name+" "+r.Type)
 	}
 
 	lines = append(lines, "}")
@@ -222,11 +222,11 @@ func (m *methodView) generateField() string {
 func (m *methodView) generateCall() string {
 	var lines []string
 	if m.IsAnyField() {
-		lines = []string{"\tfor _, call := range calls." + m.getStructureFieldName() + " {"}
+		lines = []string{"for _, call := range calls." + m.getStructureFieldName() + " {"}
 	} else {
-		lines = []string{"\tfor range calls." + m.getStructureFieldName() + " {"}
+		lines = []string{"for range calls." + m.getStructureFieldName() + " {"}
 	}
-	line := "\t\tm.EXPECT()." + m.Name + "("
+	line := "m.EXPECT()." + m.Name + "("
 	for i, param := range m.Params {
 		if i > 0 {
 			line += ", "
@@ -242,7 +242,7 @@ func (m *methodView) generateCall() string {
 	}
 	line += ").Once()"
 
-	lines = append(lines, line, "\t}")
+	lines = append(lines, line, "}")
 
 	return strings.Join(lines, "\n")
 }
@@ -279,7 +279,7 @@ func (iv *interfaceView) generateStructure() string {
 		"type " + iv.getStructureName() + " struct {",
 	}
 	for _, m := range iv.Methods {
-		lines = append(lines, "\t"+m.generateField())
+		lines = append(lines, m.generateField())
 	}
 
 	lines = append(lines, "}")
@@ -290,14 +290,14 @@ func (iv *interfaceView) generateStructure() string {
 func (iv *interfaceView) generateConstructor() string {
 	lines := []string{
 		"func " + iv.getConstructureName() + "(t *testing.T, calls *" + iv.getStructureName() + ") " + iv.Name + " {",
-		"\tt.Helper()",
-		"\tm := NewMock" + capitalize(iv.Name) + "(t)",
+		"t.Helper()",
+		"m := NewMock" + capitalize(iv.Name) + "(t)",
 	}
 	for _, method := range iv.Methods {
 		lines = append(lines, method.generateCall())
 	}
 
-	lines = append(lines, "\treturn m")
+	lines = append(lines, "return m")
 	lines = append(lines, "}")
 
 	return strings.Join(lines, "\n")
@@ -338,8 +338,8 @@ func generateAdditionalVars(iface *interfaceView) string {
 	case ctxRequired && txRequired:
 		lines := []string{
 			"var (",
-			"\t" + ctxVarDefinition,
-			"\t" + txVarDefinition,
+			ctxVarDefinition,
+			txVarDefinition,
 			")",
 		}
 
@@ -379,7 +379,7 @@ func (iv *interfaceView) generateImports() string {
 	}
 	lines := []string{"import ("}
 	for _, imp := range imports {
-		lines = append(lines, "\t\""+imp+`"`)
+		lines = append(lines, "\""+imp+`"`)
 	}
 
 	lines = append(lines, ")")
