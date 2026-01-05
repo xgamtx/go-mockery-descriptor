@@ -6,6 +6,7 @@ import (
 	"testing"
 	"github.com/stretchr/testify/mock"
 	"github.com/jackc/pgx/v5"
+	"github.com/xgamtx/go-mockery-descriptor/pkg/assessor"
 )
 
 var (
@@ -31,11 +32,18 @@ type mCall struct {
 	ReceivedR0 map[string]pgx.Tx
 }
 
+type sliceCall struct {
+	rows []string
+
+	ReceivedR0 error
+}
+
 type someCalls struct {
 	GetX []getXCall
 	SetX []setXCall
 	Nothing []nothingCall
 	M []mCall
+	Slice []sliceCall
 }
 
 func makeSomeMock(t *testing.T, calls *someCalls) Some {
@@ -52,6 +60,9 @@ func makeSomeMock(t *testing.T, calls *someCalls) Some {
 	}
 	for _, call := range calls.M {
 		m.EXPECT().M(call.M).Return(call.ReceivedR0).Once()
+	}
+	for _, call := range calls.Slice {
+		m.EXPECT().Slice(assessor.OneOf(call.rows)).Return(call.ReceivedR0).Once()
 	}
 	return m
 }

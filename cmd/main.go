@@ -10,9 +10,10 @@ import (
 )
 
 type args struct {
-	dir            string
-	interfaceName  string
-	outputFileName string
+	dir                   string
+	interfaceName         string
+	outputFileName        string
+	fieldOverwriterParams []string
 }
 
 func getArgs() args {
@@ -20,14 +21,20 @@ func getArgs() args {
 	flag.StringVar(&args.dir, "dir", ".", "directory to parse")
 	flag.StringVar(&args.interfaceName, "interface", "", "interface name")
 	flag.StringVar(&args.outputFileName, "output", "", "target file name")
+	var fieldOverwriterParam string
+	flag.StringVar(&fieldOverwriterParam, "field-overwriter-param", "", "field overwriter param")
 	flag.Parse()
+
+	if fieldOverwriterParam != "" {
+		args.fieldOverwriterParams = []string{fieldOverwriterParam}
+	}
 
 	if args.outputFileName == "" {
 		args.outputFileName = strings.ToLower(args.interfaceName) + ".gen.go"
 	}
 
 	if args.dir == "" || args.interfaceName == "" {
-		log.Fatalf("Usage: %s --file-name=<path_to_file> --interface=<interface_name> \n", os.Args[0])
+		log.Fatalf("Usage: %s --dir=<path_to_file> --interface=<interface_name>\n", os.Args[0])
 	}
 
 	return args
@@ -35,7 +42,7 @@ func getArgs() args {
 
 func main() {
 	args := getArgs()
-	output, err := app.Run(args.dir, args.interfaceName)
+	output, err := app.Run(args.dir, args.interfaceName, args.fieldOverwriterParams)
 	if err != nil {
 		log.Fatalf("Failed to generate code: %v", err)
 	}

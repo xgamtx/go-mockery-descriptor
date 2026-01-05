@@ -8,7 +8,7 @@ import (
 	"github.com/xgamtx/go-mockery-descriptor/pkg/app"
 )
 
-//go:embed some.gen.go
+//go:embed some.gen_test.go
 var expectedRes string
 
 //go:generate mockery --name=Some --inpackage --with-expecter=true
@@ -18,8 +18,9 @@ func TestRun(t *testing.T) {
 	tests := []struct {
 		name string
 
-		dir           string
-		interfaceName string
+		dir                   string
+		interfaceName         string
+		fieldOverwriterParams []string
 
 		want       string
 		wantErrMsg string
@@ -29,6 +30,9 @@ func TestRun(t *testing.T) {
 
 			dir:           ".",
 			interfaceName: "Some",
+			fieldOverwriterParams: []string{
+				"Slice.rows=github.com/xgamtx/go-mockery-descriptor/pkg/assessor.OneOf",
+			},
 
 			want: expectedRes,
 		},
@@ -37,7 +41,7 @@ func TestRun(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := app.Run(tt.dir, tt.interfaceName)
+			got, err := app.Run(tt.dir, tt.interfaceName, tt.fieldOverwriterParams)
 			assert.Equal(t, tt.want, got)
 			if tt.wantErrMsg != "" {
 				assert.Error(t, err, tt.wantErrMsg)

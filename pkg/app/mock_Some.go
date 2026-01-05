@@ -195,6 +195,52 @@ func (_c *MockSome_SetX_Call) RunAndReturn(run func(pgx.Tx, string) error) *Mock
 	return _c
 }
 
+// Slice provides a mock function with given fields: rows
+func (_m *MockSome) Slice(rows []string) error {
+	ret := _m.Called(rows)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Slice")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func([]string) error); ok {
+		r0 = rf(rows)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockSome_Slice_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Slice'
+type MockSome_Slice_Call struct {
+	*mock.Call
+}
+
+// Slice is a helper method to define mock.On call
+//   - rows []string
+func (_e *MockSome_Expecter) Slice(rows interface{}) *MockSome_Slice_Call {
+	return &MockSome_Slice_Call{Call: _e.mock.On("Slice", rows)}
+}
+
+func (_c *MockSome_Slice_Call) Run(run func(rows []string)) *MockSome_Slice_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].([]string))
+	})
+	return _c
+}
+
+func (_c *MockSome_Slice_Call) Return(_a0 error) *MockSome_Slice_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockSome_Slice_Call) RunAndReturn(run func([]string) error) *MockSome_Slice_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewMockSome creates a new instance of MockSome. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewMockSome(t interface {
