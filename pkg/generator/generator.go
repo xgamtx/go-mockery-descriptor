@@ -379,7 +379,7 @@ func (iv *interfaceView) generateImports() string {
 	}
 	lines := []string{"import ("}
 	for _, imp := range imports {
-		lines = append(lines, "\""+imp+`"`)
+		lines = append(lines, `"`+imp+`"`)
 	}
 
 	lines = append(lines, ")")
