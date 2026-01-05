@@ -3,14 +3,14 @@
 package app
 
 import (
-	"github.com/jackc/pgx/v5"
-	"github.com/stretchr/testify/mock"
 	"testing"
+	"github.com/stretchr/testify/mock"
+	"github.com/jackc/pgx/v5"
 )
 
 var (
 	anyCtx = mock.Anything
-	anyTx  = mock.Anything
+	anyTx = mock.Anything
 )
 
 type getXCall struct {
@@ -23,7 +23,7 @@ type setXCall struct {
 	ReceivedR0 error
 }
 
-type nothingCall struct{}
+type nothingCall struct {}
 
 type mCall struct {
 	M map[string]pgx.Tx
@@ -32,10 +32,10 @@ type mCall struct {
 }
 
 type someCalls struct {
-	GetX    []getXCall
-	SetX    []setXCall
+	GetX []getXCall
+	SetX []setXCall
 	Nothing []nothingCall
-	M       []mCall
+	M []mCall
 }
 
 func makeSomeMock(t *testing.T, calls *someCalls) Some {
