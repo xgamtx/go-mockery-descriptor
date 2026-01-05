@@ -6,8 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/xgamtx/go-mockery-descriptor/pkg/generator"
-	"github.com/xgamtx/go-mockery-descriptor/pkg/parser"
+	"github.com/xgamtx/go-mockery-descriptor/pkg/app"
 )
 
 type args struct {
@@ -36,12 +35,11 @@ func getArgs() args {
 
 func main() {
 	args := getArgs()
-	desc, err := parser.ParseInterfaceInDir(args.dir, args.interfaceName)
+	output, err := app.Run(args.dir, args.interfaceName)
 	if err != nil {
-		log.Fatalf("Failed to parse interface: %v", err)
+		log.Fatalf("Failed to generate code: %v", err)
 	}
 
-	output := generator.Generate(desc)
 	if err = os.WriteFile(args.outputFileName, []byte(output), 0o600); err != nil { //nolint:mnd
 		log.Fatalf("Failed to write output file: %v", err)
 	}
