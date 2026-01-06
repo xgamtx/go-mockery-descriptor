@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	anyCtxVar = "anyCtx"
-	anyTxVar  = "anyTx"
+	anyCtxConst = "anyCtx"
+	anyTxConst  = "anyTx"
 )
 
 func exprToString(expr ast.Expr) string {
@@ -59,13 +59,13 @@ type stdParamView struct {
 type ctxParamView struct{}
 
 func (v *ctxParamView) GenerateField() string          { return "" }
-func (v *ctxParamView) GenerateAssessor(string) string { return anyCtxVar }
+func (v *ctxParamView) GenerateAssessor(string) string { return anyCtxConst }
 func (v *ctxParamView) GetPathTypes() []string         { return nil }
 
 type txParamView struct{}
 
 func (v *txParamView) GenerateField() string          { return "" }
-func (v *txParamView) GenerateAssessor(string) string { return anyTxVar }
+func (v *txParamView) GenerateAssessor(string) string { return anyTxConst }
 func (v *txParamView) GetPathTypes() []string         { return nil }
 
 type customFunctionParamView struct {
@@ -293,6 +293,11 @@ func (iv *interfaceView) generateConstructor() string {
 		"t.Helper()",
 		"m := NewMock" + capitalize(iv.Name) + "(t)",
 	}
+
+	if additionalVars := iv.generateAdditionalVars(); additionalVars != "" {
+		lines = append(lines, additionalVars)
+	}
+
 	for _, method := range iv.Methods {
 		lines = append(lines, method.generateCall())
 	}
@@ -306,7 +311,7 @@ func (iv *interfaceView) generateConstructor() string {
 func (iv *interfaceView) isCtxRequired() bool {
 	for _, m := range iv.Methods {
 		for _, param := range m.Params {
-			if param.GenerateAssessor("") == anyCtxVar {
+			if param.GenerateAssessor("") == anyCtxConst {
 				return true
 			}
 		}
@@ -318,7 +323,7 @@ func (iv *interfaceView) isCtxRequired() bool {
 func (iv *interfaceView) isTxRequired() bool {
 	for _, m := range iv.Methods {
 		for _, param := range m.Params {
-			if param.GenerateAssessor("") == anyTxVar {
+			if param.GenerateAssessor("") == anyTxConst {
 				return true
 			}
 		}
@@ -327,28 +332,16 @@ func (iv *interfaceView) isTxRequired() bool {
 	return false
 }
 
-func generateAdditionalVars(iface *interfaceView) string {
-	ctxVarDefinition := anyCtxVar + " = mock.Anything"
-	txVarDefinition := anyTxVar + " = mock.Anything"
-	ctxRequired := iface.isCtxRequired()
-	txRequired := iface.isTxRequired()
-	switch {
-	case !ctxRequired && !txRequired:
-		return ""
-	case ctxRequired && txRequired:
-		lines := []string{
-			"var (",
-			ctxVarDefinition,
-			txVarDefinition,
-			")",
-		}
-
-		return strings.Join(lines, "\n")
-	case ctxRequired:
-		return "var " + ctxVarDefinition
-	default:
-		return "var " + txVarDefinition
+func (iv *interfaceView) generateAdditionalVars() string {
+	res := make([]string, 0, 2) //nolint:mnd
+	if iv.isCtxRequired() {
+		res = append(res, anyCtxConst+" := mock.Anything")
 	}
+	if iv.isTxRequired() {
+		res = append(res, anyTxConst+" := mock.Anything")
+	}
+
+	return strings.Join(res, "\n")
 }
 
 func (iv *interfaceView) generatePackageLine() string {
@@ -399,9 +392,6 @@ func Generate(iface *parser.Interface, fieldOverwriterStorage *fieldoverwriter.S
 	if imports := view.generateImports(); imports != "" {
 		lines = append(lines, imports)
 	}
-	if additionalVars := generateAdditionalVars(view); additionalVars != "" {
-		lines = append(lines, additionalVars)
-	}
 	for _, method := range view.Methods {
 		if methodStructure := method.generateStructure(); methodStructure != "" {
 			lines = append(lines, method.generateStructure())
@@ -444,7 +434,7 @@ func unique(vals []string) []string {
 	return res
 }
 
-// TODO add check if anyCtx/anyTx exists.
 // TODO add sub interface support.
 // TODO parametrize via config?
 // TODO support function instead of interfaces
+// TODO support package name override

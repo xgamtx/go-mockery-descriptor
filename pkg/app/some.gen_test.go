@@ -11,11 +11,6 @@ import (
 	"github.com/xgamtx/go-mockery-descriptor/pkg/assessor"
 )
 
-var (
-	anyCtx = mock.Anything
-	anyTx  = mock.Anything
-)
-
 type getXCall struct {
 	ReceivedR0 string
 }
@@ -51,6 +46,8 @@ type someCalls struct {
 func makeSomeMock(t *testing.T, calls *someCalls) Some {
 	t.Helper()
 	m := NewMockSome(t)
+	anyCtx := mock.Anything
+	anyTx := mock.Anything
 	for _, call := range calls.GetX {
 		m.EXPECT().GetX(anyCtx).Return(call.ReceivedR0).Once()
 	}
