@@ -438,3 +438,4 @@ func unique(vals []string) []string {
 // TODO parametrize via config?
 // TODO support function instead of interfaces
 // TODO support package name override
+// TODO add interface_name prefix option
