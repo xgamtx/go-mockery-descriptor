@@ -291,7 +291,7 @@ func (iv *interfaceView) generateConstructor() string {
 	lines := []string{
 		"func " + iv.getConstructureName() + "(t *testing.T, calls *" + iv.getStructureName() + ") " + iv.Name + " {",
 		"t.Helper()",
-		"m := NewMock" + capitalize(iv.Name) + "(t)",
+		"m := newMock" + capitalize(iv.Name) + "(t)",
 	}
 
 	if additionalVars := iv.generateAdditionalVars(); additionalVars != "" {

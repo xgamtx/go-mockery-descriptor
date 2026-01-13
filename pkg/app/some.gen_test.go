@@ -45,7 +45,7 @@ type someCalls struct {
 
 func makeSomeMock(t *testing.T, calls *someCalls) Some {
 	t.Helper()
-	m := NewMockSome(t)
+	m := newMockSome(t)
 	anyCtx := mock.Anything
 	anyTx := mock.Anything
 	for _, call := range calls.GetX {

@@ -12,7 +12,7 @@ import (
 //go:embed some.gen_test.go
 var expectedRes string
 
-//go:generate mockery --name=Some --inpackage --with-expecter=true
+//go:generate mockery --name=Some --inpackage --with-expecter=true --structname=mockSome
 func TestRun(t *testing.T) {
 	t.Parallel()
 
