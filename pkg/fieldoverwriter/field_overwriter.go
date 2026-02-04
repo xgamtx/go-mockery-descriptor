@@ -10,6 +10,7 @@ import (
 const (
 	stdFuncOneOf             = "oneOf"
 	stdFunctionElementsMatch = "elementsMatch"
+	stdFunctionAny           = "any"
 )
 
 type stdFuncDescription struct {
@@ -28,6 +29,11 @@ var stdFunctions = map[string]stdFuncDescription{ //nolint:gochecknoglobals
 		Name:         "assessor.ElementsMatch",
 		Path:         "github.com/xgamtx/go-mockery-descriptor/pkg/assessor",
 		TypeModifier: func(originalType string) string { return originalType },
+	},
+	stdFunctionAny: {
+		Name:         "mock.Anything",
+		Path:         "github.com/stretchr/testify/mock",
+		TypeModifier: func(originalType string) string { return "" },
 	},
 }
 

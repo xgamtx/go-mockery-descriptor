@@ -12,4 +12,5 @@ type Some interface {
 	Nothing()
 	M(m map[string]pgx.Tx) map[string]pgx.Tx
 	Slice(rows []string) error
+	Anything(v int)
 }

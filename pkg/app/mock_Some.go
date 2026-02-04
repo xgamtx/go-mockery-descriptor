@@ -22,6 +22,39 @@ func (_m *mockSome) EXPECT() *mockSome_Expecter {
 	return &mockSome_Expecter{mock: &_m.Mock}
 }
 
+// Anything provides a mock function with given fields: v
+func (_m *mockSome) Anything(v int) {
+	_m.Called(v)
+}
+
+// mockSome_Anything_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Anything'
+type mockSome_Anything_Call struct {
+	*mock.Call
+}
+
+// Anything is a helper method to define mock.On call
+//   - v int
+func (_e *mockSome_Expecter) Anything(v interface{}) *mockSome_Anything_Call {
+	return &mockSome_Anything_Call{Call: _e.mock.On("Anything", v)}
+}
+
+func (_c *mockSome_Anything_Call) Run(run func(v int)) *mockSome_Anything_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(int))
+	})
+	return _c
+}
+
+func (_c *mockSome_Anything_Call) Return() *mockSome_Anything_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *mockSome_Anything_Call) RunAndReturn(run func(int)) *mockSome_Anything_Call {
+	_c.Run(run)
+	return _c
+}
+
 // GetX provides a mock function with given fields: ctx
 func (_m *mockSome) GetX(ctx context.Context) string {
 	ret := _m.Called(ctx)

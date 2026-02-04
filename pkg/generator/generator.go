@@ -89,10 +89,22 @@ func newCustomFunctionParamView(v *parser.Value, fieldOverwriter fieldoverwriter
 	}
 }
 
-func (v *customFunctionParamView) GenerateField() string { return v.paramName + " " + v.paramType }
+func (v *customFunctionParamView) GenerateField() string {
+	if v.paramType == "" {
+		return ""
+	}
+
+	return v.paramName + " " + v.paramType
+}
+
 func (v *customFunctionParamView) GenerateAssessor(callerName string) string {
+
+	if v.GenerateField() == "" {
+		return v.funcName
+	}
 	return fmt.Sprintf("%s(%s.%s)", v.funcName, callerName, v.paramName)
 }
+
 func (v *customFunctionParamView) GetPathTypes() []string { return v.pathTypes }
 
 func newParamView(v *parser.Value, i int, fieldOverwriter fieldoverwriter.Overwriter) param {

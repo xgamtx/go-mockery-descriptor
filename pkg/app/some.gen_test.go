@@ -35,12 +35,15 @@ type sliceCall struct {
 	ReceivedR0 error
 }
 
+type anythingCall struct{}
+
 type someCalls struct {
-	GetX    []getXCall
-	SetX    []setXCall
-	Nothing []nothingCall
-	M       []mCall
-	Slice   []sliceCall
+	GetX     []getXCall
+	SetX     []setXCall
+	Nothing  []nothingCall
+	M        []mCall
+	Slice    []sliceCall
+	Anything []anythingCall
 }
 
 func makeSomeMock(t *testing.T, calls *someCalls) Some {
@@ -62,6 +65,9 @@ func makeSomeMock(t *testing.T, calls *someCalls) Some {
 	}
 	for _, call := range calls.Slice {
 		m.EXPECT().Slice(assessor.ElementsMatch(call.Rows)).Return(call.ReceivedR0).Once()
+	}
+	for range calls.Anything {
+		m.EXPECT().Anything(mock.Anything).Return().Once()
 	}
 	return m
 }
