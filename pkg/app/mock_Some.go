@@ -5,7 +5,6 @@ package app
 import (
 	context "context"
 
-	pgx "github.com/jackc/pgx/v5"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -102,19 +101,19 @@ func (_c *mockSome_GetX_Call) RunAndReturn(run func(context.Context) string) *mo
 }
 
 // M provides a mock function with given fields: m
-func (_m *mockSome) M(m map[string]pgx.Tx) map[string]pgx.Tx {
+func (_m *mockSome) M(m map[string]int) map[string]int {
 	ret := _m.Called(m)
 
 	if len(ret) == 0 {
 		panic("no return value specified for M")
 	}
 
-	var r0 map[string]pgx.Tx
-	if rf, ok := ret.Get(0).(func(map[string]pgx.Tx) map[string]pgx.Tx); ok {
+	var r0 map[string]int
+	if rf, ok := ret.Get(0).(func(map[string]int) map[string]int); ok {
 		r0 = rf(m)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]pgx.Tx)
+			r0 = ret.Get(0).(map[string]int)
 		}
 	}
 
@@ -127,24 +126,24 @@ type mockSome_M_Call struct {
 }
 
 // M is a helper method to define mock.On call
-//   - m map[string]pgx.Tx
+//   - m map[string]int
 func (_e *mockSome_Expecter) M(m interface{}) *mockSome_M_Call {
 	return &mockSome_M_Call{Call: _e.mock.On("M", m)}
 }
 
-func (_c *mockSome_M_Call) Run(run func(m map[string]pgx.Tx)) *mockSome_M_Call {
+func (_c *mockSome_M_Call) Run(run func(m map[string]int)) *mockSome_M_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(map[string]pgx.Tx))
+		run(args[0].(map[string]int))
 	})
 	return _c
 }
 
-func (_c *mockSome_M_Call) Return(_a0 map[string]pgx.Tx) *mockSome_M_Call {
+func (_c *mockSome_M_Call) Return(_a0 map[string]int) *mockSome_M_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *mockSome_M_Call) RunAndReturn(run func(map[string]pgx.Tx) map[string]pgx.Tx) *mockSome_M_Call {
+func (_c *mockSome_M_Call) RunAndReturn(run func(map[string]int) map[string]int) *mockSome_M_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -178,53 +177,6 @@ func (_c *mockSome_Nothing_Call) Return() *mockSome_Nothing_Call {
 
 func (_c *mockSome_Nothing_Call) RunAndReturn(run func()) *mockSome_Nothing_Call {
 	_c.Run(run)
-	return _c
-}
-
-// SetX provides a mock function with given fields: tx, x
-func (_m *mockSome) SetX(tx pgx.Tx, x string) error {
-	ret := _m.Called(tx, x)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SetX")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(pgx.Tx, string) error); ok {
-		r0 = rf(tx, x)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// mockSome_SetX_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetX'
-type mockSome_SetX_Call struct {
-	*mock.Call
-}
-
-// SetX is a helper method to define mock.On call
-//   - tx pgx.Tx
-//   - x string
-func (_e *mockSome_Expecter) SetX(tx interface{}, x interface{}) *mockSome_SetX_Call {
-	return &mockSome_SetX_Call{Call: _e.mock.On("SetX", tx, x)}
-}
-
-func (_c *mockSome_SetX_Call) Run(run func(tx pgx.Tx, x string)) *mockSome_SetX_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(pgx.Tx), args[1].(string))
-	})
-	return _c
-}
-
-func (_c *mockSome_SetX_Call) Return(_a0 error) *mockSome_SetX_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *mockSome_SetX_Call) RunAndReturn(run func(pgx.Tx, string) error) *mockSome_SetX_Call {
-	_c.Call.Return(run)
 	return _c
 }
 

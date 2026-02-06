@@ -5,7 +5,6 @@ package app
 import (
 	"testing"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/xgamtx/go-mockery-descriptor/pkg/assessor"
@@ -15,18 +14,12 @@ type getXCall struct {
 	ReceivedR0 string
 }
 
-type setXCall struct {
-	X []string
-
-	ReceivedErr error
-}
-
 type nothingCall struct{}
 
 type mCall struct {
-	M map[string]pgx.Tx
+	M map[string]int
 
-	ReceivedR0 map[string]pgx.Tx
+	ReceivedR0 map[string]int
 }
 
 type sliceCall struct {
@@ -39,7 +32,6 @@ type anythingCall struct{}
 
 type someCalls struct {
 	GetX     []getXCall
-	SetX     []setXCall
 	Nothing  []nothingCall
 	M        []mCall
 	Slice    []sliceCall
@@ -50,12 +42,8 @@ func makeSomeMock(t *testing.T, calls *someCalls) Some {
 	t.Helper()
 	m := newMockSome(t)
 	anyCtx := mock.Anything
-	anyTx := mock.Anything
 	for _, call := range calls.GetX {
 		m.EXPECT().GetX(anyCtx).Return(call.ReceivedR0).Once()
-	}
-	for _, call := range calls.SetX {
-		m.EXPECT().SetX(anyTx, assessor.OneOf(call.X)).Return(call.ReceivedErr).Once()
 	}
 	for range calls.Nothing {
 		m.EXPECT().Nothing().Return().Once()
