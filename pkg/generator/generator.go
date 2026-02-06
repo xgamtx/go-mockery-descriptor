@@ -235,11 +235,11 @@ func (m *methodView) generateField() string {
 }
 
 func (m *methodView) generateCall() string {
-	var lines []string
+	lines := make([]string, 0, 3)
 	if m.IsAnyField() {
-		lines = []string{"for _, call := range calls." + m.getStructureFieldName() + " {"}
+		lines = append(lines, "for _, call := range calls."+m.getStructureFieldName()+" {")
 	} else {
-		lines = []string{"for range calls." + m.getStructureFieldName() + " {"}
+		lines = append(lines, "for range calls."+m.getStructureFieldName()+" {")
 	}
 	line := "m.EXPECT()." + m.Name + "("
 	for i, param := range m.Params {
@@ -290,9 +290,8 @@ func (iv *interfaceView) getConstructureName() string {
 }
 
 func (iv *interfaceView) generateStructure() string {
-	lines := []string{
-		"type " + iv.getStructureName() + " struct {",
-	}
+	lines := make([]string, 0, 2+len(iv.Methods))
+	lines = append(lines, "type "+iv.getStructureName()+" struct {")
 	for _, m := range iv.Methods {
 		lines = append(lines, m.generateField())
 	}
