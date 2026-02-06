@@ -98,10 +98,10 @@ func (v *customFunctionParamView) GenerateField() string {
 }
 
 func (v *customFunctionParamView) GenerateAssessor(callerName string) string {
-
 	if v.GenerateField() == "" {
 		return v.funcName
 	}
+
 	return fmt.Sprintf("%s(%s.%s)", v.funcName, callerName, v.paramName)
 }
 
