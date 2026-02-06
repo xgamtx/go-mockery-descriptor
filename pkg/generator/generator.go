@@ -148,7 +148,10 @@ type returnView struct {
 func newReturnView(v *parser.Value, i int) *returnView {
 	t := exprToString(v.Type)
 	name := v.Name
-	if v.Name == "" {
+	if name == "" && t == "error" {
+		name = "err"
+	}
+	if name == "" {
 		name = "r" + strconv.Itoa(i)
 	}
 
