@@ -363,7 +363,8 @@ func (iv *interfaceView) generatePackageLine() string {
 }
 
 func (iv *interfaceView) getImports() []string {
-	res := []string{"testing", "github.com/stretchr/testify/mock"}
+	res := make([]string, 0, 2)
+	res = append(res, "testing", "github.com/stretchr/testify/mock")
 	for _, m := range iv.Methods {
 		for _, param := range m.Params {
 			res = append(res, param.GetPathTypes()...)
