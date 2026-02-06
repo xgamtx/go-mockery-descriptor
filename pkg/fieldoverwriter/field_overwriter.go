@@ -33,7 +33,7 @@ var stdFunctions = map[string]stdFuncDescription{ //nolint:gochecknoglobals
 	stdFunctionAny: {
 		Name:         "mock.Anything",
 		Path:         "github.com/stretchr/testify/mock",
-		TypeModifier: func(originalType string) string { return "" },
+		TypeModifier: func(string) string { return "" },
 	},
 }
 

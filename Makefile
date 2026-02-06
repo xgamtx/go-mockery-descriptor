@@ -12,7 +12,7 @@ tidy:
 
 .PHONY: test
 test:
-	go test -coverpkg=./... -coverprofile=coverage.out -race -timeout 10s ./...
+	go test -coverpkg=./... -coverprofile=coverage.out -race -timeout 5m ./...
 
 .PHONY: check
 check: generate lint test

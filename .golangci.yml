@@ -19,6 +19,7 @@ linters:
     - modernize
     - perfsprint
     - ireturn
+    - mnd
   settings:
     lll:
       line-length: 140
