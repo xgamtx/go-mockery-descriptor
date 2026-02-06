@@ -52,9 +52,7 @@ type UserService interface {
 Generate descriptors and mock constructor:
 
 ```bash
-go-mockery-descriptor --dir=. \
-  --interface=UserService \
-  --full-package-path=github.com/xgamtx/go-mockery-descriptor 
+go-mockery-descriptor --dir=. --interface=UserService
 ```
 
 This will create files similar to:

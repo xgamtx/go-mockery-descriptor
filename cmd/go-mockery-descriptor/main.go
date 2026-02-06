@@ -27,7 +27,6 @@ type args struct {
 	interfaceName         string
 	outputFileName        string
 	fieldOverwriterParams StringSlice
-	fullPackagePath       string
 }
 
 func getArgs() args {
@@ -35,7 +34,6 @@ func getArgs() args {
 	flag.StringVar(&args.dir, "dir", ".", "directory to parse")
 	flag.StringVar(&args.interfaceName, "interface", "", "interface name")
 	flag.StringVar(&args.outputFileName, "output", "", "target file name")
-	flag.StringVar(&args.fullPackagePath, "full-package-path", "", "package name")
 	flag.Var(&args.fieldOverwriterParams, "field-overwriter-param", "field overwriter param, can be used more than once")
 	flag.Parse()
 
@@ -43,8 +41,8 @@ func getArgs() args {
 		args.outputFileName = strings.ToLower(args.interfaceName) + ".gen.go"
 	}
 
-	if args.dir == "" || args.interfaceName == "" || args.fullPackagePath == "" {
-		log.Fatalf("Usage: %s --dir=<path_to_file> --interface=<interface_name> --full-package-path=<full_package_path>\n", os.Args[0])
+	if args.dir == "" || args.interfaceName == "" {
+		log.Fatalf("Usage: %s --dir=<path_to_file> --interface=<interface_name>\n", os.Args[0])
 	}
 
 	return args
@@ -52,7 +50,7 @@ func getArgs() args {
 
 func main() {
 	args := getArgs()
-	output, err := app.Run(args.dir, args.interfaceName, args.fieldOverwriterParams, args.fullPackagePath)
+	output, err := app.Run(args.dir, args.interfaceName, args.fieldOverwriterParams)
 	if err != nil {
 		log.Fatalf("Failed to generate code: %v", err)
 	}

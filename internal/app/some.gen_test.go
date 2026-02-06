@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/mock"
-
 	"github.com/xgamtx/go-mockery-descriptor/pkg/assessor"
 )
 
