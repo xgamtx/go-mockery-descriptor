@@ -19,7 +19,7 @@ check: generate lint test
 
 .PHONY: generate
 generate:
-	go generate ./pkg/...
+	go generate ./...
 
 .PHONY: clean
 clean:

@@ -22,7 +22,6 @@ func TestRun(t *testing.T) {
 		dir                   string
 		interfaceName         string
 		fieldOverwriterParams []string
-		fullPackagePath       string
 
 		want       string
 		wantErrMsg string
@@ -33,7 +32,6 @@ func TestRun(t *testing.T) {
 			dir:                   ".",
 			interfaceName:         "Some",
 			fieldOverwriterParams: []string{"Slice.rows=elementsMatch", "SetX.x=oneOf", "Anything.v=any"},
-			fullPackagePath:       "github.com/xgamtx/go-mockery-descriptor",
 
 			want: expectedRes,
 		},
@@ -42,7 +40,7 @@ func TestRun(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := app.Run(tt.dir, tt.interfaceName, tt.fieldOverwriterParams, tt.fullPackagePath)
+			got, err := app.Run(tt.dir, tt.interfaceName, tt.fieldOverwriterParams)
 			assert.Equal(t, tt.want, got)
 			if tt.wantErrMsg != "" {
 				assert.Error(t, err, tt.wantErrMsg)
