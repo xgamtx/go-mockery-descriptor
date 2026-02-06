@@ -1,9 +1,9 @@
 package app
 
 import (
-	"github.com/xgamtx/go-mockery-descriptor/pkg/fieldoverwriter"
-	"github.com/xgamtx/go-mockery-descriptor/pkg/generator"
-	"github.com/xgamtx/go-mockery-descriptor/pkg/parser"
+	"github.com/xgamtx/go-mockery-descriptor/internal/fieldoverwriter"
+	"github.com/xgamtx/go-mockery-descriptor/internal/generator"
+	"github.com/xgamtx/go-mockery-descriptor/internal/parser"
 )
 
 func Run(dir, interfaceName string, fieldOverwriterParams []string, fullPackagePath string) (string, error) {

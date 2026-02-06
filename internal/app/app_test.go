@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/xgamtx/go-mockery-descriptor/pkg/app"
+	"github.com/xgamtx/go-mockery-descriptor/internal/app"
 )
 
 //go:embed some.gen_test.go
