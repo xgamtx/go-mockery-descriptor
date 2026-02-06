@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/xgamtx/go-mockery-descriptor/pkg/app"
+	"github.com/xgamtx/go-mockery-descriptor/internal/app"
 )
 
 type StringSlice []string

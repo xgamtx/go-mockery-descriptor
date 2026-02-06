@@ -10,8 +10,8 @@ import (
 
 	"golang.org/x/tools/imports"
 
-	"github.com/xgamtx/go-mockery-descriptor/pkg/fieldoverwriter"
-	"github.com/xgamtx/go-mockery-descriptor/pkg/parser"
+	"github.com/xgamtx/go-mockery-descriptor/internal/fieldoverwriter"
+	"github.com/xgamtx/go-mockery-descriptor/internal/parser"
 )
 
 const (
