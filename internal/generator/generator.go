@@ -240,6 +240,8 @@ func newInterfaceView(
 	return res
 }
 
+func (iv *interfaceView) GetCapitalizedName() string { return capitalize(iv.Name) }
+
 func (iv *interfaceView) GetStructureName() string {
 	return unCapitalize(iv.Name) + "Calls"
 }
