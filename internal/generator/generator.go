@@ -300,7 +300,10 @@ func (iv *interfaceView) isTxRequired() bool {
 }
 
 func generateTemplate(cfg *config.Config, template string) string {
-	templates := map[string]string{"constructor": cfg.ConstructorName}
+	templates := map[string]string{
+		"constructor": cfg.ConstructorName,
+		"package":     cfg.PackageName,
+	}
 
 	res := make([]string, 0, len(templates)+1)
 	for k, v := range templates {

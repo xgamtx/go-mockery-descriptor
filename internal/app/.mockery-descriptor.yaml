@@ -1,4 +1,5 @@
 constructor-name: "newMock{{ . }}"
+package-name: "{{ . }}"
 interface: Some
 output: "{{ . }}.gen_test.go"
 field-overwriter-param:
