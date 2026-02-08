@@ -9,13 +9,39 @@ import (
 )
 
 type Config struct {
-	Dir                   string            `mapstructure:"dir"`
-	Interface             string            `mapstructure:"interface"`
-	Output                string            `mapstructure:"output"`
+	Dir             string `mapstructure:"dir"`
+	Output          string `mapstructure:"output"`
+	ConstructorName string `mapstructure:"constructor-name"`
+	PackageName     string `mapstructure:"package-name"`
+	Interfaces      []InterfaceConfig
+}
+
+type InterfaceConfig struct {
+	Dir             string `mapstructure:"dir"`
+	Output          string `mapstructure:"output"`
+	ConstructorName string `mapstructure:"constructor-name"`
+	PackageName     string `mapstructure:"package-name"`
+
+	Name                  string            `mapstructure:"name"`
 	FieldOverwriterParams []string          `mapstructure:"field-overwriter-param"`
 	RenameReturns         map[string]string `mapstructure:"rename-returns"`
-	ConstructorName       string            `mapstructure:"constructor-name"`
-	PackageName           string            `mapstructure:"package-name"`
+}
+
+func (cfg *Config) Init() {
+	for i := range cfg.Interfaces {
+		if cfg.Interfaces[i].Dir == "" {
+			cfg.Interfaces[i].Dir = cfg.Dir
+		}
+		if cfg.Interfaces[i].Output == "" {
+			cfg.Interfaces[i].Output = cfg.Output
+		}
+		if cfg.Interfaces[i].ConstructorName == "" {
+			cfg.Interfaces[i].ConstructorName = cfg.ConstructorName
+		}
+		if cfg.Interfaces[i].PackageName == "" {
+			cfg.Interfaces[i].PackageName = cfg.PackageName
+		}
+	}
 }
 
 func initFlags() {
@@ -66,6 +92,8 @@ func New() (*Config, error) {
 	if err = viper.Unmarshal(&cfg); err != nil {
 		return nil, err
 	}
+
+	cfg.Init()
 
 	return &cfg, nil
 }

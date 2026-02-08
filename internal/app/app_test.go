@@ -20,7 +20,7 @@ func TestRun(t *testing.T) {
 	tests := []struct {
 		name string
 
-		cfg *config.Config
+		cfg *config.InterfaceConfig
 
 		want       string
 		wantErrMsg string
@@ -28,10 +28,10 @@ func TestRun(t *testing.T) {
 		{
 			name: "success",
 
-			cfg: &config.Config{
+			cfg: &config.InterfaceConfig{
+				Name:                  "Some",
 				ConstructorName:       "newMock{{ . }}",
 				PackageName:           "{{ . }}",
-				Interface:             "Some",
 				FieldOverwriterParams: []string{"Slice.rows=elementsMatch", "SetX.x=oneOf", "Anything.v=any"},
 				RenameReturns:         map[string]string{"GetX.r0": "X"},
 			},

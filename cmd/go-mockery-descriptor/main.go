@@ -17,14 +17,6 @@ func initConfig() *config.Config {
 		log.Fatalf("Failed to parse config: %v", err)
 	}
 
-	if cfg.Output == "" {
-		cfg.Output = strings.ToLower(cfg.Interface) + ".gen.go"
-	}
-
-	if cfg.Dir == "" || cfg.Interface == "" {
-		log.Fatalf("Usage: %s --dir=<path_to_file> --interface=<interface_name>\n", os.Args[0])
-	}
-
 	return cfg
 }
 
@@ -45,17 +37,19 @@ func generateFileName(cfg *config.Config, interfaceName string) (string, error) 
 
 func main() {
 	cfg := initConfig()
-	output, err := app.Run(cfg)
-	if err != nil {
-		log.Fatalf("Failed to generate code: %v", err)
-	}
+	for _, ifaceCfg := range cfg.Interfaces {
+		output, err := app.Run(&ifaceCfg)
+		if err != nil {
+			log.Fatalf("Failed to generate code: %v", err)
+		}
 
-	fileName, err := generateFileName(cfg, cfg.Interface)
-	if err != nil {
-		log.Fatalf("Failed to generate code: %v", err)
-	}
+		fileName, err := generateFileName(cfg, ifaceCfg.Name)
+		if err != nil {
+			log.Fatalf("Failed to generate code: %v", err)
+		}
 
-	if err = os.WriteFile(fileName, []byte(output), 0o600); err != nil { //nolint:mnd
-		log.Fatalf("Failed to write output file: %v", err)
+		if err = os.WriteFile(fileName, []byte(output), 0o600); err != nil { //nolint:mnd
+			log.Fatalf("Failed to write output file: %v", err)
+		}
 	}
 }

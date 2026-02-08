@@ -299,7 +299,7 @@ func (iv *interfaceView) isTxRequired() bool {
 	return false
 }
 
-func generateTemplate(cfg *config.Config, template string) string {
+func generateTemplate(cfg *config.InterfaceConfig, template string) string {
 	templates := map[string]string{
 		"constructor": cfg.ConstructorName,
 		"package":     cfg.PackageName,
@@ -314,7 +314,7 @@ func generateTemplate(cfg *config.Config, template string) string {
 }
 
 func Generate(
-	cfg *config.Config,
+	cfg *config.InterfaceConfig,
 	iface *parser.Interface,
 	fieldOverwriterStorage *fieldoverwriter.Storage,
 	returnsRenamerStorage *returnsrenamer.Storage,
