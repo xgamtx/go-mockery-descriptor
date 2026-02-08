@@ -29,6 +29,7 @@ func initFlags() {
 func initDefaults() {
 	viper.SetDefault("dir", ".")
 	viper.SetDefault("constructor-name", "newMock{{ . }}")
+	viper.SetDefault("output", "{{ . }}.mockery-helper_test.go")
 }
 
 func New() (*Config, error) {
