@@ -34,7 +34,7 @@ type {{ .GetStructureName }} struct {
 
 func {{ .GetConstructureName }}(t *testing.T, calls *{{ .GetStructureName }}) {{ .Name }} {
 t.Helper()
-m := {{template "constructor" .Name}}(t)
+m := {{template "constructor" .GetCapitalizedName }}(t)
 {{ range .AdditionalVars -}}
     {{ . }}
 {{ end }}
