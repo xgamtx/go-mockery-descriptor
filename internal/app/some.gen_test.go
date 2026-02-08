@@ -16,14 +16,12 @@ type getXCall struct {
 type nothingCall struct{}
 
 type mCall struct {
-	M map[string]int
-
+	M          map[string]int
 	ReceivedR0 map[string]int
 }
 
 type sliceCall struct {
-	Rows []string
-
+	Rows        []string
 	ReceivedErr error
 }
 
@@ -56,5 +54,6 @@ func makeSomeMock(t *testing.T, calls *someCalls) Some {
 	for range calls.Anything {
 		m.EXPECT().Anything(mock.Anything).Return().Once()
 	}
+
 	return m
 }
