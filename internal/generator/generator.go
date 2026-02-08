@@ -1,11 +1,13 @@
 package generator
 
 import (
+	"bytes"
+	_ "embed"
 	"fmt"
 	"go/ast"
 	"go/format"
 	"strconv"
-	"strings"
+	"text/template"
 
 	"golang.org/x/tools/imports"
 
@@ -17,6 +19,9 @@ const (
 	anyCtxConst = "anyCtx"
 	anyTxConst  = "anyTx"
 )
+
+//go:embed mock.tmpl
+var tmplContent string
 
 func exprToString(expr ast.Expr) string {
 	switch t := expr.(type) {
@@ -193,72 +198,12 @@ func (m *methodView) IsAnyField() bool {
 	return false
 }
 
-func (m *methodView) getStructureName() string {
+func (m *methodView) GetStructureName() string {
 	return unCapitalize(m.Name) + "Call"
 }
 
-func (m *methodView) getStructureFieldName() string {
+func (m *methodView) GetStructureFieldName() string {
 	return capitalize(m.Name)
-}
-
-func (m *methodView) generateStructure() string {
-	if !m.IsAnyField() {
-		return "type " + m.getStructureName() + " struct {}"
-	}
-
-	lines := []string{
-		"type " + m.getStructureName() + " struct {",
-	}
-	var paramsCount int
-	for _, param := range m.Params {
-		if view := param.GenerateField(); view != "" {
-			lines = append(lines, view)
-			paramsCount++
-		}
-	}
-
-	if paramsCount > 0 && len(m.Returns) > 0 {
-		lines = append(lines, "")
-	}
-	for _, r := range m.Returns {
-		lines = append(lines, r.Name+" "+r.Type)
-	}
-
-	lines = append(lines, "}")
-
-	return strings.Join(lines, "\n")
-}
-
-func (m *methodView) generateField() string {
-	return m.getStructureFieldName() + " []" + m.getStructureName()
-}
-
-func (m *methodView) generateCall() string {
-	lines := make([]string, 0, 3)
-	if m.IsAnyField() {
-		lines = append(lines, "for _, call := range calls."+m.getStructureFieldName()+" {")
-	} else {
-		lines = append(lines, "for range calls."+m.getStructureFieldName()+" {")
-	}
-	line := "m.EXPECT()." + m.Name + "("
-	for i, param := range m.Params {
-		if i > 0 {
-			line += ", "
-		}
-		line += param.GenerateAssessor("call")
-	}
-	line += ").Return("
-	for i, r := range m.Returns {
-		if i > 0 {
-			line += ", "
-		}
-		line += "call." + r.Name
-	}
-	line += ").Once()"
-
-	lines = append(lines, line, "}")
-
-	return strings.Join(lines, "\n")
 }
 
 type interfaceView struct {
@@ -280,45 +225,39 @@ func newInterfaceView(iface *parser.Interface, fieldOverwriterStorage *fieldover
 	return res
 }
 
-func (iv *interfaceView) getStructureName() string {
+func (iv *interfaceView) GetStructureName() string {
 	return unCapitalize(iv.Name) + "Calls"
 }
 
-func (iv *interfaceView) getConstructureName() string {
+func (iv *interfaceView) GetConstructureName() string {
 	return "make" + capitalize(iv.Name) + "Mock"
 }
 
-func (iv *interfaceView) generateStructure() string {
-	lines := make([]string, 0, 2+len(iv.Methods))
-	lines = append(lines, "type "+iv.getStructureName()+" struct {")
-	for _, m := range iv.Methods {
-		lines = append(lines, m.generateField())
+func (iv *interfaceView) AdditionalVars() []string {
+	res := make([]string, 0, 2) //nolint:mnd
+	if iv.isCtxRequired() {
+		res = append(res, anyCtxConst+" := mock.Anything")
+	}
+	if iv.isTxRequired() {
+		res = append(res, anyTxConst+" := mock.Anything")
 	}
 
-	lines = append(lines, "}")
-
-	return strings.Join(lines, "\n")
+	return res
 }
 
-func (iv *interfaceView) generateConstructor() string {
-	lines := []string{
-		"func " + iv.getConstructureName() + "(t *testing.T, calls *" + iv.getStructureName() + ") " + iv.Name + " {",
-		"t.Helper()",
-		"m := newMock" + capitalize(iv.Name) + "(t)",
+func (iv *interfaceView) GetImports() []string {
+	res := make([]string, 0, 2)
+	res = append(res, "testing", "github.com/stretchr/testify/mock")
+	for _, m := range iv.Methods {
+		for _, param := range m.Params {
+			res = append(res, param.GetPathTypes()...)
+		}
+		for _, ret := range m.Returns {
+			res = append(res, ret.PathTypes...)
+		}
 	}
 
-	if additionalVars := iv.generateAdditionalVars(); additionalVars != "" {
-		lines = append(lines, additionalVars)
-	}
-
-	for _, method := range iv.Methods {
-		lines = append(lines, method.generateCall())
-	}
-
-	lines = append(lines, "return m")
-	lines = append(lines, "}")
-
-	return strings.Join(lines, "\n")
+	return unique(res)
 }
 
 func (iv *interfaceView) isCtxRequired() bool {
@@ -345,84 +284,31 @@ func (iv *interfaceView) isTxRequired() bool {
 	return false
 }
 
-func (iv *interfaceView) generateAdditionalVars() string {
-	res := make([]string, 0, 2) //nolint:mnd
-	if iv.isCtxRequired() {
-		res = append(res, anyCtxConst+" := mock.Anything")
-	}
-	if iv.isTxRequired() {
-		res = append(res, anyTxConst+" := mock.Anything")
-	}
-
-	return strings.Join(res, "\n")
-}
-
-func (iv *interfaceView) generatePackageLine() string {
-	return "package " + iv.PackageName
-}
-
-func (iv *interfaceView) getImports() []string {
-	res := make([]string, 0, 2)
-	res = append(res, "testing", "github.com/stretchr/testify/mock")
-	for _, m := range iv.Methods {
-		for _, param := range m.Params {
-			res = append(res, param.GetPathTypes()...)
-		}
-		for _, ret := range m.Returns {
-			res = append(res, ret.PathTypes...)
-		}
-	}
-
-	return unique(res)
-}
-
-func (iv *interfaceView) generateImports() string {
-	imports := iv.getImports()
-	switch len(imports) {
-	case 0:
-		return ""
-	case 1:
-		return "import " + imports[0]
-	}
-	lines := []string{"import ("}
-	for _, imp := range imports {
-		lines = append(lines, `"`+imp+`"`)
-	}
-
-	lines = append(lines, ")")
-
-	return strings.Join(lines, "\n")
-}
-
 func Generate(iface *parser.Interface, fieldOverwriterStorage *fieldoverwriter.Storage) (string, error) {
 	view := newInterfaceView(iface, fieldOverwriterStorage)
-
-	lines := []string{
-		"// Code generated by go-mockery-descriptor v1.0.0. DO NOT EDIT.",
-		view.generatePackageLine(),
-	}
-	if imports := view.generateImports(); imports != "" {
-		lines = append(lines, imports)
-	}
-	for _, method := range view.Methods {
-		if methodStructure := method.generateStructure(); methodStructure != "" {
-			lines = append(lines, method.generateStructure())
-		}
-	}
-	lines = append(lines, view.generateStructure())
-	lines = append(lines, view.generateConstructor())
-
-	formattedOutput, err := format.Source([]byte(strings.Join(lines, "\n\n")))
+	tmpl := template.New("mock.tmpl")
+	tmpl, err := tmpl.Parse(tmplContent)
 	if err != nil {
 		return "", err
 	}
 
-	formattedOutput, err = formatImports(formattedOutput)
-	if err != nil {
+	var buf bytes.Buffer
+	if err = tmpl.Execute(&buf, view); err != nil {
 		return "", err
 	}
 
-	return string(formattedOutput), nil
+	formatted := buf.Bytes()
+	formatted1, err := format.Source(formatted)
+	if err == nil {
+		formatted = formatted1
+	}
+
+	formatted1, err = formatImports(formatted)
+	if err == nil {
+		formatted = formatted1
+	}
+
+	return string(formatted), nil
 }
 
 func formatImports(content []byte) ([]byte, error) {
@@ -443,7 +329,6 @@ func unique(vals []string) []string {
 }
 
 // TODO add sub interface support.
-// TODO parametrize via config?
 // TODO support function instead of interfaces
 // TODO support package name override
 // TODO add interface_name prefix option
