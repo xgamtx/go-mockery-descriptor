@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/xgamtx/go-mockery-descriptor/internal/app"
+	"github.com/xgamtx/go-mockery-descriptor/internal/config"
 )
 
 //go:embed some.gen_test.go
@@ -19,9 +20,7 @@ func TestRun(t *testing.T) {
 	tests := []struct {
 		name string
 
-		dir                   string
-		interfaceName         string
-		fieldOverwriterParams []string
+		cfg *config.Config
 
 		want       string
 		wantErrMsg string
@@ -29,9 +28,11 @@ func TestRun(t *testing.T) {
 		{
 			name: "success",
 
-			dir:                   ".",
-			interfaceName:         "Some",
-			fieldOverwriterParams: []string{"Slice.rows=elementsMatch", "SetX.x=oneOf", "Anything.v=any"},
+			cfg: &config.Config{
+				Dir:                   ".",
+				Interface:             "Some",
+				FieldOverwriterParams: []string{"Slice.rows=elementsMatch", "SetX.x=oneOf", "Anything.v=any"},
+			},
 
 			want: expectedRes,
 		},
@@ -40,7 +41,7 @@ func TestRun(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := app.Run(tt.dir, tt.interfaceName, tt.fieldOverwriterParams)
+			got, err := app.Run(tt.cfg)
 			assert.Equal(t, tt.want, got)
 			if tt.wantErrMsg != "" {
 				assert.Error(t, err, tt.wantErrMsg)
