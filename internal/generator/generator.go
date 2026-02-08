@@ -7,6 +7,7 @@ import (
 	"go/ast"
 	"go/format"
 	"strconv"
+	"strings"
 	"text/template"
 
 	"golang.org/x/tools/imports"
@@ -298,6 +299,17 @@ func (iv *interfaceView) isTxRequired() bool {
 	return false
 }
 
+func generateTemplate(cfg *config.Config, template string) string {
+	templates := map[string]string{"constructor": cfg.ConstructorName}
+
+	res := make([]string, 0, len(templates)+1)
+	for k, v := range templates {
+		res = append(res, fmt.Sprintf(`{{ define "%s" }}%s{{ end }}`, k, v))
+	}
+
+	return strings.Join(append(res, template), "\n")
+}
+
 func Generate(
 	cfg *config.Config,
 	iface *parser.Interface,
@@ -306,7 +318,9 @@ func Generate(
 ) (string, error) {
 	view := newInterfaceView(iface, fieldOverwriterStorage, returnsRenamerStorage)
 	tmpl := template.New("mock.tmpl")
-	tmpl, err := tmpl.Parse(`{{ define "constructor" }}` + cfg.ConstructorName + `{{ end }} ` + tmplContent)
+
+	fullTemplate := generateTemplate(cfg, tmplContent)
+	tmpl, err := tmpl.Parse(fullTemplate)
 	if err != nil {
 		return "", err
 	}
