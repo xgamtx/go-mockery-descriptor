@@ -44,15 +44,22 @@ import "context"
 
 type UserService interface {
     GetUser(ctx context.Context, id string) (*User, error)
-    ListUsers(ctx context.Context, filter *UserFilter) ([]*User, error)
+    ListUsers(ctx context.Context, filter *UserFilter) ([]User, error)
     CreateUser(ctx context.Context, user *User) error
 }
 ```
 
-Generate descriptors and mock constructor:
+Generate descriptors and mock constructor `go-mockery-descriptor` with config:
 
-```bash
-go-mockery-descriptor --dir=. --interface=UserService
+```yaml
+constructor-name: "newMock{{ . }}"
+package-name: "{{ . }}"
+output: "{{ . }}.gen_test.go"
+interfaces:
+  - name: UserService
+    rename-returns:
+      GetUser.r0: User
+      ListUsers.r0: Users
 ```
 
 This will create files similar to:
@@ -69,22 +76,19 @@ import (
 )
 
 type getUserCall struct {
-  Id string
-
-  ReceivedR0  *User
-  ReceivedErr error
+  Id           string
+  ReceivedUser *User
+  ReceivedErr  error
 }
 
 type listUsersCall struct {
-  Filter *UserFilter
-
-  ReceivedR0  []*User
-  ReceivedErr error
+  Filter        *UserFilter
+  ReceivedUsers []User
+  ReceivedErr   error
 }
 
 type createUserCall struct {
-  User *User
-
+  User        *User
   ReceivedErr error
 }
 
@@ -99,17 +103,17 @@ func makeUserServiceMock(t *testing.T, calls *userServiceCalls) UserService {
   m := newMockUserService(t)
   anyCtx := mock.Anything
   for _, call := range calls.GetUser {
-    m.EXPECT().GetUser(anyCtx, call.Id).Return(call.ReceivedR0, call.ReceivedErr).Once()
+    m.EXPECT().GetUser(anyCtx, call.Id).Return(call.ReceivedUser, call.ReceivedErr).Once()
   }
   for _, call := range calls.ListUsers {
-    m.EXPECT().ListUsers(anyCtx, call.Filter).Return(call.ReceivedR0, call.ReceivedErr).Once()
+    m.EXPECT().ListUsers(anyCtx, call.Filter).Return(call.ReceivedUsers, call.ReceivedErr).Once()
   }
   for _, call := range calls.CreateUser {
     m.EXPECT().CreateUser(anyCtx, call.User).Return(call.ReceivedErr).Once()
   }
+
   return m
 }
-
 ```
 
 ## Why not just use mockery?
