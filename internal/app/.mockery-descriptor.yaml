@@ -1,10 +1,11 @@
 constructor-name: "newMock{{ . }}"
 package-name: "{{ . }}"
-interface: Some
 output: "{{ . }}.gen_test.go"
-field-overwriter-param:
-  - Slice.rows=elementsMatch
-  - SetX.x=oneOf
-  - Anything.v=any
-rename-returns:
-  GetX.r0: X
+interfaces:
+  - name: Some
+    field-overwriter-param:
+      - Slice.rows=elementsMatch
+      - SetX.x=oneOf
+      - Anything.v=any
+    rename-returns:
+      GetX.r0: X

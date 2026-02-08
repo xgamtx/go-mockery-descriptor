@@ -8,8 +8,8 @@ import (
 	"github.com/xgamtx/go-mockery-descriptor/internal/returnsrenamer"
 )
 
-func Run(cfg *config.Config) (string, error) {
-	desc, err := parser.ParseInterfaceInDir(cfg.Dir, cfg.Interface)
+func Run(cfg *config.InterfaceConfig) (string, error) {
+	desc, err := parser.ParseInterfaceInDir(cfg.Dir, cfg.Name)
 	if err != nil {
 		return "", err
 	}
