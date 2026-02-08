@@ -1,6 +1,6 @@
 constructor-name: "newMock{{ . }}"
 interface: Some
-output: some.gen_test.go
+output: "{{ . }}.gen_test.go"
 field-overwriter-param:
   - Slice.rows=elementsMatch
   - SetX.x=oneOf
