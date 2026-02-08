@@ -24,5 +24,5 @@ func Run(cfg *config.Config) (string, error) {
 		return "", err
 	}
 
-	return generator.Generate(desc, overwriterStorage, returnRenamerStorage)
+	return generator.Generate(cfg, desc, overwriterStorage, returnRenamerStorage)
 }

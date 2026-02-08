@@ -11,6 +11,7 @@ import (
 
 	"golang.org/x/tools/imports"
 
+	"github.com/xgamtx/go-mockery-descriptor/internal/config"
 	"github.com/xgamtx/go-mockery-descriptor/internal/fieldoverwriter"
 	"github.com/xgamtx/go-mockery-descriptor/internal/parser"
 	"github.com/xgamtx/go-mockery-descriptor/internal/returnsrenamer"
@@ -298,13 +299,14 @@ func (iv *interfaceView) isTxRequired() bool {
 }
 
 func Generate(
+	cfg *config.Config,
 	iface *parser.Interface,
 	fieldOverwriterStorage *fieldoverwriter.Storage,
 	returnsRenamerStorage *returnsrenamer.Storage,
 ) (string, error) {
 	view := newInterfaceView(iface, fieldOverwriterStorage, returnsRenamerStorage)
 	tmpl := template.New("mock.tmpl")
-	tmpl, err := tmpl.Parse(tmplContent)
+	tmpl, err := tmpl.Parse(`{{ define "constructor" }}` + cfg.ConstructorName + `{{ end }} ` + tmplContent)
 	if err != nil {
 		return "", err
 	}

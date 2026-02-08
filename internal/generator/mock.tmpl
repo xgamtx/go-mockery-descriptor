@@ -34,7 +34,7 @@ type {{ .GetStructureName }} struct {
 
 func {{ .GetConstructureName }}(t *testing.T, calls *{{ .GetStructureName }}) {{ .Name }} {
 t.Helper()
-m := newMock{{.Name}}(t)
+m := {{template "constructor" .Name}}(t)
 {{ range .AdditionalVars -}}
     {{ . }}
 {{ end }}
