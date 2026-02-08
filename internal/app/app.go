@@ -5,6 +5,7 @@ import (
 	"github.com/xgamtx/go-mockery-descriptor/internal/fieldoverwriter"
 	"github.com/xgamtx/go-mockery-descriptor/internal/generator"
 	"github.com/xgamtx/go-mockery-descriptor/internal/parser"
+	"github.com/xgamtx/go-mockery-descriptor/internal/returnsrenamer"
 )
 
 func Run(cfg *config.Config) (string, error) {
@@ -18,5 +19,10 @@ func Run(cfg *config.Config) (string, error) {
 		return "", err
 	}
 
-	return generator.Generate(desc, overwriterStorage)
+	returnRenamerStorage, err := returnsrenamer.NewStorage(cfg.RenameReturns)
+	if err != nil {
+		return "", err
+	}
+
+	return generator.Generate(desc, overwriterStorage, returnRenamerStorage)
 }

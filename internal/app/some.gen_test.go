@@ -10,7 +10,7 @@ import (
 )
 
 type getXCall struct {
-	ReceivedR0 string
+	ReceivedX string
 }
 
 type nothingCall struct{}
@@ -40,7 +40,7 @@ func makeSomeMock(t *testing.T, calls *someCalls) Some {
 	m := newMockSome(t)
 	anyCtx := mock.Anything
 	for _, call := range calls.GetX {
-		m.EXPECT().GetX(anyCtx).Return(call.ReceivedR0).Once()
+		m.EXPECT().GetX(anyCtx).Return(call.ReceivedX).Once()
 	}
 	for range calls.Nothing {
 		m.EXPECT().Nothing().Return().Once()
