@@ -2,6 +2,7 @@ package generator
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"go/ast"
 	"go/format"
@@ -18,6 +19,9 @@ const (
 	anyCtxConst = "anyCtx"
 	anyTxConst  = "anyTx"
 )
+
+//go:embed mock.tmpl
+var tmplContent string
 
 func exprToString(expr ast.Expr) string {
 	switch t := expr.(type) {
@@ -282,8 +286,8 @@ func (iv *interfaceView) isTxRequired() bool {
 
 func Generate(iface *parser.Interface, fieldOverwriterStorage *fieldoverwriter.Storage) (string, error) {
 	view := newInterfaceView(iface, fieldOverwriterStorage)
-	tmpl := template.New("mock.tmpl") // имя должно совпадать с именем файла!
-	tmpl, err := tmpl.ParseFiles("/Users/vasilij/Documents/Developing/go-mockery-descriptor/internal/generator/mock.tmpl")
+	tmpl := template.New("mock.tmpl")
+	tmpl, err := tmpl.Parse(tmplContent)
 	if err != nil {
 		return "", err
 	}
