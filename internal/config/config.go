@@ -9,10 +9,11 @@ import (
 )
 
 type Config struct {
-	Dir                   string   `mapstructure:"dir"`
-	Interface             string   `mapstructure:"interface"`
-	Output                string   `mapstructure:"output"`
-	FieldOverwriterParams []string `mapstructure:"field-overwriter-param"`
+	Dir                   string            `mapstructure:"dir"`
+	Interface             string            `mapstructure:"interface"`
+	Output                string            `mapstructure:"output"`
+	FieldOverwriterParams []string          `mapstructure:"field-overwriter-param"`
+	RenameReturns         map[string]string `mapstructure:"rename-returns"`
 }
 
 func initFlags() {
@@ -26,6 +27,7 @@ func initFlags() {
 
 func New() (*Config, error) {
 	initFlags()
+	viper.SetOptions(viper.KeyDelimiter("::"))
 	viper.SetConfigType("yaml")
 
 	dirs, err := getConfigPaths()

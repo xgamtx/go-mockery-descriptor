@@ -13,6 +13,7 @@ import (
 
 	"github.com/xgamtx/go-mockery-descriptor/internal/fieldoverwriter"
 	"github.com/xgamtx/go-mockery-descriptor/internal/parser"
+	"github.com/xgamtx/go-mockery-descriptor/internal/returnsrenamer"
 )
 
 const (
@@ -149,7 +150,7 @@ type returnView struct {
 	PathTypes []string
 }
 
-func newReturnView(v *parser.Value, i int) *returnView {
+func newReturnView(v *parser.Value, i int, returnsRenamer *returnsrenamer.ReturnRenamer) *returnView {
 	t := exprToString(v.Type)
 	name := v.Name
 	if name == "" && t == "error" {
@@ -157,6 +158,9 @@ func newReturnView(v *parser.Value, i int) *returnView {
 	}
 	if name == "" {
 		name = "r" + strconv.Itoa(i)
+	}
+	if returnsRenamer != nil && name == returnsRenamer.GetOldReturnName() {
+		name = returnsRenamer.GetNewReturnName()
 	}
 
 	return &returnView{Name: "Received" + capitalize(name), Type: t, PathTypes: v.PathTypes}
@@ -168,7 +172,11 @@ type methodView struct {
 	Returns []returnView
 }
 
-func newMethodView(method *parser.Method, fieldOverwriterStorage *fieldoverwriter.Storage) *methodView {
+func newMethodView(
+	method *parser.Method,
+	fieldOverwriterStorage *fieldoverwriter.Storage,
+	returnsRenamerStorage *returnsrenamer.Storage,
+) *methodView {
 	res := &methodView{
 		Name:    method.Name,
 		Params:  make([]param, 0, len(method.Params)),
@@ -178,8 +186,9 @@ func newMethodView(method *parser.Method, fieldOverwriterStorage *fieldoverwrite
 		fieldOverwriter := fieldOverwriterStorage.Get(method.Name, param.Name, i)
 		res.Params = append(res.Params, newParamView(&param, i, fieldOverwriter))
 	}
+	returnRenamer := returnsRenamerStorage.GetReturnRenamer(method.Name)
 	for i, r := range method.Returns {
-		res.Returns = append(res.Returns, *newReturnView(&r, i))
+		res.Returns = append(res.Returns, *newReturnView(&r, i, returnRenamer))
 	}
 
 	return res
@@ -212,14 +221,18 @@ type interfaceView struct {
 	Methods     []methodView
 }
 
-func newInterfaceView(iface *parser.Interface, fieldOverwriterStorage *fieldoverwriter.Storage) *interfaceView {
+func newInterfaceView(
+	iface *parser.Interface,
+	fieldOverwriterStorage *fieldoverwriter.Storage,
+	returnsRenamerStorage *returnsrenamer.Storage,
+) *interfaceView {
 	res := &interfaceView{
 		PackageName: iface.PackageName,
 		Name:        iface.Name,
 		Methods:     make([]methodView, 0, len(iface.Methods)),
 	}
 	for _, method := range iface.Methods {
-		res.Methods = append(res.Methods, *newMethodView(&method, fieldOverwriterStorage))
+		res.Methods = append(res.Methods, *newMethodView(&method, fieldOverwriterStorage, returnsRenamerStorage))
 	}
 
 	return res
@@ -284,8 +297,12 @@ func (iv *interfaceView) isTxRequired() bool {
 	return false
 }
 
-func Generate(iface *parser.Interface, fieldOverwriterStorage *fieldoverwriter.Storage) (string, error) {
-	view := newInterfaceView(iface, fieldOverwriterStorage)
+func Generate(
+	iface *parser.Interface,
+	fieldOverwriterStorage *fieldoverwriter.Storage,
+	returnsRenamerStorage *returnsrenamer.Storage,
+) (string, error) {
+	view := newInterfaceView(iface, fieldOverwriterStorage, returnsRenamerStorage)
 	tmpl := template.New("mock.tmpl")
 	tmpl, err := tmpl.Parse(tmplContent)
 	if err != nil {

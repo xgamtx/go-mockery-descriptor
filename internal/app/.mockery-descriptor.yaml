@@ -5,3 +5,5 @@ field-overwriter-param:
   - Slice.rows=elementsMatch
   - SetX.x=oneOf
   - Anything.v=any
+rename-returns:
+  GetX.r0: X
