@@ -15,6 +15,7 @@ type Config struct {
 	FieldOverwriterParams []string          `mapstructure:"field-overwriter-param"`
 	RenameReturns         map[string]string `mapstructure:"rename-returns"`
 	ConstructorName       string            `mapstructure:"constructor-name"`
+	PackageName           string            `mapstructure:"package-name"`
 }
 
 func initFlags() {
@@ -30,6 +31,7 @@ func initDefaults() {
 	viper.SetDefault("dir", ".")
 	viper.SetDefault("constructor-name", "newMock{{ . }}")
 	viper.SetDefault("output", "{{ . }}.mockery-helper_test.go")
+	viper.SetDefault("package-name", "{{ . }}_test")
 }
 
 func New() (*Config, error) {
