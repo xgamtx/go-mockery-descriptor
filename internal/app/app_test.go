@@ -29,6 +29,7 @@ func TestRun(t *testing.T) {
 			name: "success",
 
 			cfg: &config.Config{
+				ConstructorName:       "newMock{{ . }}",
 				Interface:             "Some",
 				FieldOverwriterParams: []string{"Slice.rows=elementsMatch", "SetX.x=oneOf", "Anything.v=any"},
 				RenameReturns:         map[string]string{"GetX.r0": "X"},
