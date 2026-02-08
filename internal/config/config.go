@@ -25,8 +25,13 @@ func initFlags() {
 	pflag.Parse()
 }
 
+func initDefaults() {
+	viper.SetDefault("dir", ".")
+}
+
 func New() (*Config, error) {
 	initFlags()
+	initDefaults()
 	viper.SetOptions(viper.KeyDelimiter("::"))
 	viper.SetConfigType("yaml")
 
