@@ -1,4 +1,3 @@
-dir: .
 interface: Some
 output: some.gen_test.go
 field-overwriter-param:
