@@ -1,0 +1,7 @@
+dir: .
+interface: Some
+output: some.gen_test.go
+field-overwriter-param:
+  - Slice.rows=elementsMatch
+  - SetX.x=oneOf
+  - Anything.v=any
