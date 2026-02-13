@@ -148,6 +148,68 @@ func (_c *mockSome_M_Call) RunAndReturn(run func(map[string]int) map[string]int)
 	return _c
 }
 
+// Multi provides a mock function with no fields
+func (_m *mockSome) Multi() (string, int, error) {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Multi")
+	}
+
+	var r0 string
+	var r1 int
+	var r2 error
+	if rf, ok := ret.Get(0).(func() (string, int, error)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func() int); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	if rf, ok := ret.Get(2).(func() error); ok {
+		r2 = rf()
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// mockSome_Multi_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Multi'
+type mockSome_Multi_Call struct {
+	*mock.Call
+}
+
+// Multi is a helper method to define mock.On call
+func (_e *mockSome_Expecter) Multi() *mockSome_Multi_Call {
+	return &mockSome_Multi_Call{Call: _e.mock.On("Multi")}
+}
+
+func (_c *mockSome_Multi_Call) Run(run func()) *mockSome_Multi_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *mockSome_Multi_Call) Return(_a0 string, _a1 int, _a2 error) *mockSome_Multi_Call {
+	_c.Call.Return(_a0, _a1, _a2)
+	return _c
+}
+
+func (_c *mockSome_Multi_Call) RunAndReturn(run func() (string, int, error)) *mockSome_Multi_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Nothing provides a mock function with no fields
 func (_m *mockSome) Nothing() {
 	_m.Called()

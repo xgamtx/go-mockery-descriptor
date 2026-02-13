@@ -8,4 +8,5 @@ type Some interface {
 	M(m map[string]int) map[string]int
 	Slice(rows []string) error
 	Anything(v int)
+	Multi() (string, int, error)
 }
