@@ -33,7 +33,11 @@ func TestRun(t *testing.T) {
 				ConstructorName:       "newMock{{ . }}",
 				PackageName:           "{{ . }}",
 				FieldOverwriterParams: []string{"Slice.rows=elementsMatch", "SetX.x=oneOf", "Anything.v=any"},
-				RenameReturns:         map[string]string{"GetX.r0": "X"},
+				RenameReturns: map[string]string{
+					"GetX.r0":  "X",
+					"Multi.r0": "X",
+					"Multi.r1": "Y",
+				},
 			},
 
 			want: expectedRes,

@@ -27,12 +27,19 @@ type sliceCall struct {
 
 type anythingCall struct{}
 
+type multiCall struct {
+	ReceivedX   string
+	ReceivedY   int
+	ReceivedErr error
+}
+
 type someCalls struct {
 	GetX     []getXCall
 	Nothing  []nothingCall
 	M        []mCall
 	Slice    []sliceCall
 	Anything []anythingCall
+	Multi    []multiCall
 }
 
 func makeSomeMock(t *testing.T, calls *someCalls) Some {
@@ -53,6 +60,9 @@ func makeSomeMock(t *testing.T, calls *someCalls) Some {
 	}
 	for range calls.Anything {
 		m.EXPECT().Anything(mock.Anything).Return().Once()
+	}
+	for _, call := range calls.Multi {
+		m.EXPECT().Multi().Return(call.ReceivedX, call.ReceivedY, call.ReceivedErr).Once()
 	}
 
 	return m

@@ -9,42 +9,44 @@ import (
 var errInvalidReturnRenamerParams = errors.New("invalid return renamer params")
 
 type ReturnRenamer struct {
-	methodName string
-	returnName string
-
-	resultName string
+	nameAliases map[string]string
 }
 
-func newReturnRenamer(k, val string) (ReturnRenamer, error) {
-	paramsParser := regexp.MustCompile(`^([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$`)
-	match := paramsParser.FindStringSubmatch(k)
-	if len(match) == 0 {
-		return ReturnRenamer{}, errInvalidReturnRenamerParams
+func (r *ReturnRenamer) Append(oldName, newName string) {
+	if r.nameAliases == nil {
+		r.nameAliases = make(map[string]string)
+	}
+	r.nameAliases[oldName] = newName
+}
+
+func (r *ReturnRenamer) GetNewReturnName(oldName string) *string {
+	if r == nil {
+		return nil
+	}
+	newName, ok := r.nameAliases[oldName]
+	if !ok {
+		return nil
 	}
 
-	return ReturnRenamer{
-		methodName: match[1],
-		returnName: match[2],
-		resultName: val,
-	}, nil
+	return &newName
 }
-
-func (r ReturnRenamer) GetMethodName() string    { return r.methodName }
-func (r ReturnRenamer) GetOldReturnName() string { return r.returnName }
-func (r ReturnRenamer) GetNewReturnName() string { return r.resultName }
 
 type Storage struct {
 	renamer map[string]ReturnRenamer
 }
 
 func NewStorage(params map[string]string) (*Storage, error) {
-	s := Storage{renamer: make(map[string]ReturnRenamer, len(params))}
+	s := Storage{renamer: make(map[string]ReturnRenamer)}
 	for k, v := range params {
-		r, err := newReturnRenamer(k, v)
+		methodName, oldVal, newVal, err := s.parse(k, v)
 		if err != nil {
 			return nil, err
 		}
-		s.renamer[strings.ToLower(r.GetMethodName())] = r
+
+		key := s.getKey(methodName)
+		renamer := s.renamer[key]
+		renamer.Append(oldVal, newVal)
+		s.renamer[key] = renamer
 	}
 
 	return &s, nil
@@ -56,4 +58,16 @@ func (s *Storage) GetReturnRenamer(methodName string) *ReturnRenamer {
 	}
 
 	return nil
+}
+
+func (s *Storage) getKey(methodName string) string { return strings.ToLower(methodName) }
+
+func (s *Storage) parse(k, v string) (methodName, oldVal, newVal string, err error) { //nolint:nonamedreturns
+	paramsParser := regexp.MustCompile(`^([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$`)
+	match := paramsParser.FindStringSubmatch(k)
+	if len(match) == 0 {
+		return "", "", "", errInvalidReturnRenamerParams
+	}
+
+	return match[1], match[2], v, nil
 }

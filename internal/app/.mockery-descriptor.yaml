@@ -9,3 +9,5 @@ interfaces:
       - Anything.v=any
     rename-returns:
       GetX.r0: X
+      Multi.r0: X
+      Multi.r1: Y

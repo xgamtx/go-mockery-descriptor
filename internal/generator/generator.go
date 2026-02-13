@@ -161,8 +161,8 @@ func newReturnView(v *parser.Value, i int, returnsRenamer *returnsrenamer.Return
 	if name == "" {
 		name = "r" + strconv.Itoa(i)
 	}
-	if returnsRenamer != nil && name == returnsRenamer.GetOldReturnName() {
-		name = returnsRenamer.GetNewReturnName()
+	if newName := returnsRenamer.GetNewReturnName(name); newName != nil {
+		name = *newName
 	}
 
 	return &returnView{Name: "Received" + capitalize(name), Type: t, PathTypes: v.PathTypes}
