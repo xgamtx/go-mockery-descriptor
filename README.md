@@ -116,6 +116,28 @@ func makeUserServiceMock(t *testing.T, calls *userServiceCalls) UserService {
 }
 ```
 
+## Embedded interfaces
+
+Embedded interfaces are supported out of the box — methods promoted from them are generated
+alongside the interface's own methods, just like `mockery` flattens them into a single mock:
+
+```go
+type Base interface {
+    Ping(ctx context.Context) error
+}
+
+type Service interface {
+    Base
+    io.ReaderFrom
+
+    Own(x int) (string, error)
+}
+```
+
+Own methods keep their source order and come first; promoted methods are appended after them.
+Embedding works transitively, across packages (types stay qualified and the needed imports are
+added automatically), and overlapping method sets are deduplicated.
+
 ## Why not just use mockery?
 
 `mockery` is excellent when you want ready-to-use mock structs quickly.  

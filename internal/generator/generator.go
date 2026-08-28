@@ -4,7 +4,6 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
-	"go/ast"
 	"go/format"
 	"strconv"
 	"strings"
@@ -25,31 +24,6 @@ const (
 
 //go:embed mock.tmpl
 var tmplContent string
-
-func exprToString(expr ast.Expr) string {
-	switch t := expr.(type) {
-	case *ast.Ident:
-		return t.Name
-	case *ast.StarExpr:
-		return "*" + exprToString(t.X)
-	case *ast.SelectorExpr:
-		return exprToString(t.X) + "." + t.Sel.Name
-	case *ast.ArrayType:
-		return "[]" + exprToString(t.Elt)
-	case *ast.MapType:
-		return "map[" + exprToString(t.Key) + "]" + exprToString(t.Value)
-	case *ast.InterfaceType:
-		if t.Methods == nil || len(t.Methods.List) == 0 {
-			return "any"
-		}
-
-		return "interface{...}"
-	case *ast.FuncType:
-		return "func(/*...*/)"
-	default:
-		return "unknown"
-	}
-}
 
 type param interface {
 	GenerateField() string
@@ -90,7 +64,7 @@ func newCustomFunctionParamView(v *parser.Value, fieldOverwriter fieldoverwriter
 
 	return &customFunctionParamView{
 		paramName: capitalize(v.Name),
-		paramType: fieldOverwriter.ModifyType(exprToString(v.Type)),
+		paramType: fieldOverwriter.ModifyType(v.Type),
 		funcName:  fieldOverwriter.GetFuncName(),
 		pathTypes: pathTypes,
 	}
@@ -119,7 +93,7 @@ func newParamView(v *parser.Value, i int, fieldOverwriter fieldoverwriter.Overwr
 		return newCustomFunctionParamView(v, fieldOverwriter)
 	}
 
-	t := exprToString(v.Type)
+	t := v.Type
 	switch t {
 	case "context.Context":
 		return &ctxParamView{}
@@ -153,7 +127,7 @@ type returnView struct {
 }
 
 func newReturnView(v *parser.Value, i int, returnsRenamer *returnsrenamer.ReturnRenamer) *returnView {
-	t := exprToString(v.Type)
+	t := v.Type
 	name := v.Name
 	if name == "" && t == "error" {
 		name = "err"
@@ -366,7 +340,5 @@ func unique(vals []string) []string {
 	return res
 }
 
-// TODO add sub interface support.
 // TODO support function instead of interfaces
-// TODO support package name override
 // TODO add interface_name prefix option
