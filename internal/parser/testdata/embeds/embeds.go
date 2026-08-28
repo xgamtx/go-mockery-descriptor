@@ -15,8 +15,8 @@ type Middle interface {
 	Mid(rows []string) (map[string]int, error)
 }
 
-// Transitive проверяет транзитивные встроенные интерфейсы, встроенный интерфейс из
-// другого пакета и пустой интерфейс.
+// Transitive covers transitive embedding, an interface embedded from another package
+// and an empty interface.
 type Transitive interface {
 	Middle
 	io.ReaderFrom
@@ -25,7 +25,7 @@ type Transitive interface {
 	Own(x int) (string, error)
 }
 
-// Overlapping проверяет пересечение наборов методов встроенных интерфейсов.
+// Overlapping covers intersecting method sets of embedded interfaces.
 type Overlapping interface {
 	Base
 	Middle

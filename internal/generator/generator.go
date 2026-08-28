@@ -20,6 +20,10 @@ import (
 const (
 	anyCtxConst = "anyCtx"
 	anyTxConst  = "anyTx"
+
+	// executeMethod is the method name mockery gives to a mock of a function type.
+	executeMethod = "Execute"
+	callsParam    = "calls"
 )
 
 //go:embed mock.tmpl
@@ -146,10 +150,13 @@ type methodView struct {
 	Name    string
 	Params  []param
 	Returns []returnView
+
+	isFunc bool
 }
 
 func newMethodView(
 	method *parser.Method,
+	isFunc bool,
 	fieldOverwriterStorage *fieldoverwriter.Storage,
 	returnsRenamerStorage *returnsrenamer.Storage,
 ) *methodView {
@@ -157,6 +164,7 @@ func newMethodView(
 		Name:    method.Name,
 		Params:  make([]param, 0, len(method.Params)),
 		Returns: make([]returnView, 0, len(method.Returns)),
+		isFunc:  isFunc,
 	}
 	for i, param := range method.Params {
 		fieldOverwriter := fieldOverwriterStorage.Get(method.Name, param.Name, i)
@@ -191,9 +199,30 @@ func (m *methodView) GetStructureFieldName() string {
 	return capitalize(m.Name)
 }
 
+// GetMockMethodName returns the method name on the mock: for a function type mockery
+// generates a single Execute method.
+func (m *methodView) GetMockMethodName() string {
+	if m.isFunc {
+		return executeMethod
+	}
+
+	return m.Name
+}
+
+// GetCallsExpr returns the expression the constructor iterates the calls over: for a function
+// type the calls are passed flat, without an aggregating struct.
+func (m *methodView) GetCallsExpr() string {
+	if m.isFunc {
+		return callsParam
+	}
+
+	return callsParam + "." + m.GetStructureFieldName()
+}
+
 type interfaceView struct {
 	PackageName string
 	Name        string
+	IsFunc      bool
 	Methods     []methodView
 }
 
@@ -205,10 +234,14 @@ func newInterfaceView(
 	res := &interfaceView{
 		PackageName: iface.PackageName,
 		Name:        iface.Name,
+		IsFunc:      iface.IsFunc,
 		Methods:     make([]methodView, 0, len(iface.Methods)),
 	}
 	for _, method := range iface.Methods {
-		res.Methods = append(res.Methods, *newMethodView(&method, fieldOverwriterStorage, returnsRenamerStorage))
+		res.Methods = append(
+			res.Methods,
+			*newMethodView(&method, iface.IsFunc, fieldOverwriterStorage, returnsRenamerStorage),
+		)
 	}
 
 	return res
@@ -222,6 +255,30 @@ func (iv *interfaceView) GetStructureName() string {
 
 func (iv *interfaceView) GetConstructureName() string {
 	return "make" + capitalize(iv.Name) + "Mock"
+}
+
+// GetCallsParamType returns the type of the constructor parameter: a flat slice of calls for a
+// function type and a pointer to the aggregating struct for an interface.
+func (iv *interfaceView) GetCallsParamType() string {
+	if iv.IsFunc {
+		if len(iv.Methods) == 0 {
+			return "[]struct{}"
+		}
+
+		return "[]" + iv.Methods[0].GetStructureName()
+	}
+
+	return "*" + iv.GetStructureName()
+}
+
+// GetReturnExpr returns the result expression: a mock of a function type is converted to the
+// type itself through its Execute method.
+func (iv *interfaceView) GetReturnExpr() string {
+	if iv.IsFunc {
+		return "m." + executeMethod
+	}
+
+	return "m"
 }
 
 func (iv *interfaceView) AdditionalVars() []string {
@@ -340,5 +397,4 @@ func unique(vals []string) []string {
 	return res
 }
 
-// TODO support function instead of interfaces
 // TODO add interface_name prefix option

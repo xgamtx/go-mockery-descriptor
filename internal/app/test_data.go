@@ -24,3 +24,9 @@ type Embedded interface {
 
 	Own(x int) (string, error)
 }
+
+type Handler func(ctx context.Context, id string) (string, error)
+
+type Ticker func()
+
+type Filter func(rows []string, mode int, ignored bool) error
