@@ -11,3 +11,4 @@ interfaces:
       GetX.r0: X
       Multi.r0: X
       Multi.r1: Y
+  - name: Embedded

@@ -13,7 +13,11 @@ import (
 //go:embed some.gen_test.go
 var expectedRes string
 
+//go:embed embedded.gen_test.go
+var expectedEmbeddedRes string
+
 //go:generate mockery --name=Some --inpackage --with-expecter=true --structname=mockSome
+//go:generate mockery --name=Embedded --inpackage --with-expecter=true --structname=mockEmbedded
 func TestRun(t *testing.T) {
 	t.Parallel()
 
@@ -41,6 +45,17 @@ func TestRun(t *testing.T) {
 			},
 
 			want: expectedRes,
+		},
+		{
+			name: "embedded interfaces",
+
+			cfg: &config.InterfaceConfig{
+				Name:            "Embedded",
+				ConstructorName: "newMock{{ . }}",
+				PackageName:     "{{ . }}",
+			},
+
+			want: expectedEmbeddedRes,
 		},
 	}
 	for _, tt := range tests {
