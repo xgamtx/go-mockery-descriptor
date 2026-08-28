@@ -138,6 +138,44 @@ Own methods keep their source order and come first; promoted methods are appende
 Embedding works transitively, across packages (types stay qualified and the needed imports are
 added automatically), and overlapping method sets are deduplicated.
 
+## Function types
+
+Function types are supported too — just list them alongside interfaces, the kind is detected
+automatically:
+
+```yaml
+interfaces:
+  - name: UserService     # interface
+  - name: Handler         # func(ctx context.Context, id string) (string, error)
+    rename-returns:
+      Handler.r0: Result
+```
+
+A function has a single call, so its calls are passed as a plain slice instead of an aggregating
+struct, and the constructor returns the mock's `Execute` method — which is the function type itself:
+
+```go
+type handlerCall struct {
+  Id             string
+  ReceivedResult string
+  ReceivedErr    error
+}
+
+func makeHandlerMock(t *testing.T, calls []handlerCall) Handler {
+  t.Helper()
+  m := newMockHandler(t)
+  anyCtx := mock.Anything
+  for _, call := range calls {
+    m.EXPECT().Execute(anyCtx, call.Id).Return(call.ReceivedResult, call.ReceivedErr).Once()
+  }
+
+  return m.Execute
+}
+```
+
+Note that `rename-returns` and `field-overwriter-param` keys are prefixed with the **type name**
+(`Handler.r0`), not with `Execute`.
+
 ## Why not just use mockery?
 
 `mockery` is excellent when you want ready-to-use mock structs quickly.  

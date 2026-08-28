@@ -26,13 +26,15 @@ import (
     }
 {{ end }}
 
+{{ if not .IsFunc }}
 type {{ .GetStructureName }} struct {
 {{- range .Methods -}}
     {{ .GetStructureFieldName }} []{{ .GetStructureName }}
 {{ end -}}
 }
+{{ end }}
 
-func {{ .GetConstructureName }}(t *testing.T, calls *{{ .GetStructureName }}) {{ .Name }} {
+func {{ .GetConstructureName }}(t *testing.T, calls {{ .GetCallsParamType }}) {{ .Name }} {
 t.Helper()
 m := {{template "constructor" .GetCapitalizedName }}(t)
 {{ range .AdditionalVars -}}
@@ -40,11 +42,11 @@ m := {{template "constructor" .GetCapitalizedName }}(t)
 {{ end }}
 {{- range .Methods -}}
     {{ if .IsAnyField -}}
-        for _, call := range calls.{{ .GetStructureFieldName }} {
+        for _, call := range {{ .GetCallsExpr }} {
     {{ else -}}
-        for range calls.{{ .GetStructureFieldName }} {
+        for range {{ .GetCallsExpr }} {
     {{ end -}}
-    m.EXPECT().{{ .Name }}(
+    m.EXPECT().{{ .GetMockMethodName }}(
     {{- range $i, $param := .Params -}}
         {{- if $i -}}, {{- end -}}
         {{ $param.GenerateAssessor "call" }}
@@ -58,5 +60,5 @@ m := {{template "constructor" .GetCapitalizedName }}(t)
     }
 {{ end }}
 
-return m
+return {{ .GetReturnExpr }}
 }

@@ -9,8 +9,8 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-// loadMode загружает не только сам пакет, но и его зависимости: типы встроенных
-// интерфейсов из других пакетов доступны только вместе с ними.
+// loadMode loads the package along with its dependencies: types of interfaces embedded from
+// other packages are only available together with them.
 const loadMode = packages.NeedName | packages.NeedSyntax | packages.NeedTypes |
 	packages.NeedTypesInfo | packages.NeedImports | packages.NeedDeps
 
@@ -26,9 +26,12 @@ type Method struct {
 	Returns []Value
 }
 
+// Interface describes a generation target: either an interface or a function type.
+// For a function type the single "method" is named after the type itself.
 type Interface struct {
 	PackageName string
 	Name        string
+	IsFunc      bool
 	Methods     []Method
 }
 
@@ -45,33 +48,42 @@ func ParseInterfaceInDir(dir, interfaceName string) (*Interface, error) {
 
 	pkg := pkgs[0]
 
-	// AST нужен только чтобы сохранить порядок объявления методов: go/types отдаёт их отсортированными.
-	declaredOrder, err := declaredMethodOrder(pkg.Syntax, interfaceName)
-	if err != nil {
-		return nil, err
+	obj := pkg.Types.Scope().Lookup(interfaceName)
+	if obj == nil {
+		return nil, fmt.Errorf("%s is not found", interfaceName)
 	}
 
-	iface, err := lookupInterface(pkg.Types, interfaceName)
-	if err != nil {
-		return nil, err
-	}
+	switch underlying := obj.Type().Underlying().(type) {
+	case *types.Interface:
+		// The AST is only needed to keep the declaration order: go/types returns methods sorted.
+		declaredOrder, err := declaredMethodOrder(pkg.Syntax, interfaceName)
+		if err != nil {
+			return nil, err
+		}
 
-	return parseInterface(interfaceName, pkg.Types, iface, declaredOrder), nil
+		return parseInterface(interfaceName, pkg.Types, underlying, declaredOrder), nil
+
+	case *types.Signature:
+		return parseFunc(interfaceName, pkg.Types, underlying), nil
+
+	default:
+		return nil, fmt.Errorf("%s is neither an interface nor a function type", interfaceName)
+	}
 }
 
-// lookupInterface возвращает полный набор методов интерфейса, включая методы встроенных интерфейсов.
-func lookupInterface(pkg *types.Package, name string) (*types.Interface, error) {
-	obj := pkg.Scope().Lookup(name)
-	if obj == nil {
-		return nil, fmt.Errorf("%s is not found", name)
+// parseFunc describes a function type as a single call: mockery generates a mock with a single
+// Execute method for such a type.
+func parseFunc(funcName string, pkg *types.Package, sig *types.Signature) *Interface {
+	return &Interface{
+		PackageName: pkg.Name(),
+		Name:        funcName,
+		IsFunc:      true,
+		Methods: []Method{{
+			Name:    funcName,
+			Params:  extractTuple(pkg, sig.Params()),
+			Returns: extractTuple(pkg, sig.Results()),
+		}},
 	}
-
-	iface, ok := obj.Type().Underlying().(*types.Interface)
-	if !ok {
-		return nil, fmt.Errorf("%s is not an interface", name)
-	}
-
-	return iface, nil
 }
 
 func declaredMethodOrder(files []*ast.File, name string) ([]string, error) {
@@ -82,7 +94,7 @@ func declaredMethodOrder(files []*ast.File, name string) ([]string, error) {
 
 	var order []string
 	for _, method := range iface.Methods.List {
-		// Встроенные интерфейсы не имеют имён: их методы добавляются после явно объявленных.
+		// Embedded interfaces have no names: their methods are appended after the declared ones.
 		for _, methodName := range method.Names {
 			order = append(order, methodName.Name)
 		}
@@ -94,7 +106,7 @@ func declaredMethodOrder(files []*ast.File, name string) ([]string, error) {
 func getInterfaceByName(files []*ast.File, name string) (*ast.InterfaceType, error) {
 	for _, f := range files {
 		for _, decl := range f.Decls {
-			// Ищем декларацию типа
+			// Looking for a type declaration
 			genDecl, ok := decl.(*ast.GenDecl)
 			if !ok || genDecl.Tok != token.TYPE {
 				continue
@@ -106,7 +118,7 @@ func getInterfaceByName(files []*ast.File, name string) (*ast.InterfaceType, err
 					continue
 				}
 
-				// Проверяем, что это интерфейс с нужным именем
+				// Make sure this is an interface with the required name
 				if typeSpec.Name.Name != name {
 					continue
 				}
@@ -142,7 +154,7 @@ func parseInterface(
 		methods[method.Name()] = method
 	}
 
-	// Сначала методы, объявленные в интерфейсе напрямую, — в порядке исходника.
+	// First go the methods declared in the interface itself, in source order.
 	handled := make(map[string]struct{}, len(declaredOrder))
 	for _, methodName := range declaredOrder {
 		method, ok := methods[methodName]
@@ -154,7 +166,7 @@ func parseInterface(
 		result.Methods = append(result.Methods, parseMethod(pkg, method))
 	}
 
-	// Затем методы, полученные из встроенных интерфейсов.
+	// Then go the methods promoted from embedded interfaces.
 	for i := range iface.NumMethods() {
 		method := iface.Method(i)
 		if _, ok := handled[method.Name()]; ok {
@@ -196,8 +208,8 @@ func extractTuple(pkg *types.Package, tuple *types.Tuple) []Value {
 	return values
 }
 
-// renderType печатает тип так, как он должен выглядеть в генерируемом файле, и попутно
-// собирает пути пакетов, на которые этот тип ссылается.
+// renderType prints the type the way it must appear in the generated file and collects the
+// paths of the packages this type refers to.
 func renderType(pkg *types.Package, t types.Type) (string, []string) {
 	var pathTypes []string
 

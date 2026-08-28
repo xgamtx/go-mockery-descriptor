@@ -12,3 +12,12 @@ interfaces:
       Multi.r0: X
       Multi.r1: Y
   - name: Embedded
+  - name: Handler
+    rename-returns:
+      Handler.r0: Result
+  - name: Ticker
+  - name: Filter
+    field-overwriter-param:
+      - Filter.rows=elementsMatch
+      - Filter.mode=oneOf
+      - Filter.ignored=any
